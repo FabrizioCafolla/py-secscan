@@ -1,0 +1,126 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "python@3.12": {
+      "last_modified": "2024-10-13T23:44:06Z",
+      "plugin_version": "0.0.4",
+      "resolved": "github:NixOS/nixpkgs/d4f247e89f6e10120f911e2e2d2254a050d0f732#python3",
+      "source": "devbox-search",
+      "version": "3.12.6",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ybnf7k6i9p244bbhsbxizqk65z58cwyr-python3-3.12.6",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/ybnf7k6i9p244bbhsbxizqk65z58cwyr-python3-3.12.6"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/pv8p76ihrnqf81xan9qnv53ks84wmp07-python3-3.12.6",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/qk5wzj1q68jdvnzph5ckiir2wj87qygq-python3-3.12.6-debug"
+            }
+          ],
+          "store_path": "/nix/store/pv8p76ihrnqf81xan9qnv53ks84wmp07-python3-3.12.6"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/d30gb7nm3bnd58a5c3gwnmxywzbls69v-python3-3.12.6",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/d30gb7nm3bnd58a5c3gwnmxywzbls69v-python3-3.12.6"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/wfbjq35kxs6x83c3ncpfxdyl5gbhdx4h-python3-3.12.6",
+              "default": true
+            },
+            {
+              "name": "debug",
+              "path": "/nix/store/wmg3whp163d4y3www9kfziwks1yn6k9i-python3-3.12.6-debug"
+            }
+          ],
+          "store_path": "/nix/store/wfbjq35kxs6x83c3ncpfxdyl5gbhdx4h-python3-3.12.6"
+        }
+      }
+    },
+    "uv@0.4.30": {
+      "last_modified": "2024-12-03T12:40:06Z",
+      "resolved": "github:NixOS/nixpkgs/566e53c2ad750c84f6d31f9ccb9d00f823165550#uv",
+      "source": "devbox-search",
+      "version": "0.4.30",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/kcam2c7p2n7k6kazx8ipy9v93mmp2acd-uv-0.4.30",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/5yg78vahciiraipg9xbmq3gmncyw4wig-uv-0.4.30-dist"
+            }
+          ],
+          "store_path": "/nix/store/kcam2c7p2n7k6kazx8ipy9v93mmp2acd-uv-0.4.30"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/xwmpvkhkxvbibbkfpphijw85l4dxrd6m-uv-0.4.30",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/i1rvg12ibvdmbnfjdfzi02n273sz659k-uv-0.4.30-dist"
+            }
+          ],
+          "store_path": "/nix/store/xwmpvkhkxvbibbkfpphijw85l4dxrd6m-uv-0.4.30"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/wwnghahh84p3b3f859vsq0l1lcjy2cqj-uv-0.4.30",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/s042m2w3hk82hg4a1a4m7vzzkw7rdwbi-uv-0.4.30-dist"
+            }
+          ],
+          "store_path": "/nix/store/wwnghahh84p3b3f859vsq0l1lcjy2cqj-uv-0.4.30"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/w7cs06nn9vvk8a59nv48y4biv9zzv43x-uv-0.4.30",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/93m90v0vlxwmz04pia4hj7ni791x65rv-uv-0.4.30-dist"
+            }
+          ],
+          "store_path": "/nix/store/w7cs06nn9vvk8a59nv48y4biv9zzv43x-uv-0.4.30"
+        }
+      }
+    }
+  }
+}

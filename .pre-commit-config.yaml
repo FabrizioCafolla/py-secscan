@@ -1,0 +1,37 @@
+default_language_version:
+  python: python3
+
+default_stages: [pre-commit, pre-commit, pre-push, post-checkout]
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: debug-statements
+      - id: check-docstring-first
+      - id: check-json
+      - id: check-yaml
+      - id: check-symlinks
+      - id: check-added-large-files
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: forbid-submodules
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.5.13
+    hooks:
+      - id: uv-lock
+      - id: uv-sync
+        args: ["--locked", "--all-packages"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format

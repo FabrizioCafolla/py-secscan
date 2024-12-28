@@ -1,0 +1,22 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions: read-all
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Action
+        uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          release-type: simple
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
