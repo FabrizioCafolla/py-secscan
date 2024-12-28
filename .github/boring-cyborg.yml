@@ -6,24 +6,18 @@ labelPRBasedOnFilePath:
     - scripts/**/*
 
   dependencies:
-    - website/package.json
-    - website/yarn.lock
-    - requirements.txt
-    - requirements-dev.txt
+    - uv.lock
+    - pyproject.toml
 
-  website:
-    - website/*
-    - website/**/*
-
-  infrastructure:
-    - infrastructure/*
-    - infrastructure/**/*
+  app:
+    - src/*
+    - src/**/*
 
 firstPRWelcomeComment: >
   Thanks for opening this pull request! Please check out our contributing guidelines.
 
 verifyTitles:
-  titleRegexp: ^(feat|feat!|fix|fix!|docs|refactor|refactor!|test|chore|build)\((ci|main|docs|deps|deps-dev|website|infrastructure)\):.*
+  titleRegexp: ^(feat|feat!|fix|fix!|docs|refactor|refactor!|test|chore|build)\((ci|main|docs|deps|deps-dev|app)\):.*
   alwaysUsePrTitle: true
   validateEitherPrOrSingleCommitTitle: true
   statusTitle: "Title Validator"

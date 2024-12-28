@@ -1,5 +1,5 @@
 [project]
-name = "src"
+name = "py-secscan"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -10,4 +10,4 @@ dependencies = [
 ]
 
 [tool.uv.workspace]
-members = ["src"]
+members = ["py-secscan"]
