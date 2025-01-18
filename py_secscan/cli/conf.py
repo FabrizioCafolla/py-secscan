@@ -2,13 +2,15 @@ import os
 import logging
 from datetime import datetime
 
-CURRENT_DIR = os.getcwd()
-BASENAME = "py-secscan"
+CURRENT_DIRPATH = os.getcwd()
+PY_SECSCAN_DIRNAME = ".py-secscan"
 
 DEFAULT_ENV = {
-    "PY_SECSCAN_CONFIG_FILENAME": f".{BASENAME}.conf.yml",
-    "PY_SECSCAN_PATH": os.path.join(f"{CURRENT_DIR}/.{BASENAME}"),
-    "PY_SECSCAN_LOGGING_PATH": os.path.join(f"{CURRENT_DIR}/.{BASENAME}/logs"),
+    "PY_SECSCAN_CONFIG_FILENAME": ".py-secscan.conf.yml",
+    "PY_SECSCAN_PATH": os.path.join(f"{CURRENT_DIRPATH}/{PY_SECSCAN_DIRNAME}"),
+    "PY_SECSCAN_LOGGING_PATH": os.path.join(
+        f"{CURRENT_DIRPATH}/{PY_SECSCAN_DIRNAME}/logs"
+    ),
     "PY_SECSCAN__LOGGING_NAME": "main",
     "PY_SECSCAN_LOGGING_FORMAT": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     "PY_SECSCAN_DATA": str(datetime.now().strftime("%Y-%m-%d")),

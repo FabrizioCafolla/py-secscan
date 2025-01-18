@@ -13,3 +13,5 @@ wheels/
 .env*
 .DS_Store
 .devbox/
+.venv/
+.py-secscan/
