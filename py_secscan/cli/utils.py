@@ -1,6 +1,10 @@
 from py_secscan.cli.settings import LOGGER
 
 
+class PySecScanException(Exception):
+    pass
+
+
 def info(message: str) -> None:
     LOGGER.info(message)
     print("[INFO]", message)
@@ -26,7 +30,10 @@ def critical(message: str) -> None:
     print("[CRITICAL]", message)
 
 
-def exception(e: Exception, message: str = "") -> None:
+def exception(exception: Exception = None, message: str = "") -> None:
+    if exception:
+        LOGGER.exception(str(exception))
+        raise exception
+
     LOGGER.exception(message)
-    print("[EXCEPTION]", message)
-    raise e
+    raise PySecScanException(message)

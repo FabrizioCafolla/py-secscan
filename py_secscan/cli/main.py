@@ -36,16 +36,16 @@ def setup_venv(
         subprocess.check_call(
             shlex.split(f"python -m venv {venv_dirpath}"),
         )
-        utils.info(
+        utils.warning(
             f"Virtualenv created: run 'source {venv_dirpath}/bin/activate' to activate it"
         )
-        exit(0)
+        sys.exit(0)
 
     create_venv()
     create_requirements_txt(packages)
     install_packages()
 
-    # Create gitignore in root directory if not exist in the .gitignore file add new line
+    # Create a .gitignore file in the root directory if it does not exist, and add the exclusion line if not already present
     if not os.path.isfile(".gitignore"):
         gitignore = []
     else:
@@ -63,8 +63,8 @@ def setup_venv(
 def load_project_conf() -> configuration_parser.PySecScanConfig:
     try:
         if not os.path.isfile(settings.DEFAULT_ENV["PY_SECSCAN_CONFIG_FILENAME"]):
-            raise Exception(
-                f"File {settings.DEFAULT_ENV['PY_SECSCAN_CONFIG_FILENAME']} not found"
+            utils.exception(
+                message=f"File {settings.DEFAULT_ENV['PY_SECSCAN_CONFIG_FILENAME']} not found"
             )
 
         project_settings = configuration_parser.PySecScanConfig.from_yaml(
@@ -74,10 +74,8 @@ def load_project_conf() -> configuration_parser.PySecScanConfig:
         settings.setenv_from_dict(overwrite=True, **project_settings.env)
     except FileNotFoundError as e:
         utils.exception(e)
-    except Exception as e:
-        utils.exception(e)
-    else:
-        return project_settings
+
+    return project_settings
 
 
 def run(package_name: str, args: list[str]) -> None:
@@ -108,14 +106,18 @@ def main() -> bool:
             )
 
             if not package.enabled:
+                utils.warning(f"{package.name} package is disabled")
                 settings.RUNTIME_EXCUTION_STATUS.update(
                     package.name, settings.RunTimeAllowedExecutionStatus.DISABLED
                 )
                 continue
 
+            utils.info(f"Running {package.name}")
+
             returncode = run(package.name, package.args)
 
             if returncode == 0:
+                utils.info(f"Package {package.name} completed")
                 settings.RUNTIME_EXCUTION_STATUS.update(
                     package.name, settings.RunTimeAllowedExecutionStatus.COMPLETED
                 )
@@ -125,15 +127,17 @@ def main() -> bool:
                 package.name, settings.RunTimeAllowedExecutionStatus.FAILED
             )
             if not package.on_error_continue:
-                sys.exit(returncode)
+                utils.exception(
+                    message=f"Error {package.name} package returncode: {returncode}"
+                )
     except KeyboardInterrupt as e:
         utils.exception(e)
     except Exception as e:
         utils.exception(e)
-    else:
-        return 0
     finally:
         utils.info(settings.RUNTIME_EXCUTION_STATUS)
+
+    return 0
 
 
 if __name__ == "__main__":
