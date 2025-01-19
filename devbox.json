@@ -4,12 +4,12 @@
   "env": {},
   "include": [],
   "shell": {
-    "init_hook": [". ${DEVBOX_PROJECT_ROOT}/.activate"],
+    "init_hook": ["devbox run setup", ". ${DEVBOX_PROJECT_ROOT}/.activate"],
     "scripts": {
       "setup": [
         "uv venv --python 3.12",
         "uv sync",
-        "pre-commit install",
+        "uv run pre-commit install",
         "devbox run test"
       ],
       "test": ["uv run pre-commit run --all-files"]
