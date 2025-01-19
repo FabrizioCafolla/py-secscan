@@ -2,12 +2,16 @@ import sys
 import os
 import subprocess
 import shlex
-from py_secscan.cli import conf, parser
+from py_secscan.cli import configuration_parser, settings, utils
 
 
-def setup_venv(packages: list[parser.ModuleConfig], venv_dirpath: str) -> None:
+def setup_venv(
+    packages: list[configuration_parser.ModuleConfig], venv_dirpath: str
+) -> None:
     def create_requirements_txt(packages) -> None:
-        with open(f"{conf.DEFAULT_ENV['PY_SECSCAN_PATH']}/requirements.txt", "w") as f:
+        with open(
+            f"{settings.DEFAULT_ENV['PY_SECSCAN_PATH']}/requirements.txt", "w"
+        ) as f:
             for package in packages:
                 line = (
                     f"{package.name}=={package.version}"
@@ -18,12 +22,12 @@ def setup_venv(packages: list[parser.ModuleConfig], venv_dirpath: str) -> None:
 
     def install_packages() -> None:
         command = (
-            f"pip install -r {conf.DEFAULT_ENV['PY_SECSCAN_PATH']}/requirements.txt"
+            f"pip install -r {settings.DEFAULT_ENV['PY_SECSCAN_PATH']}/requirements.txt"
         )
         subprocess.check_call(
             shlex.split(command),
         )
-        print("Packages installed")
+        utils.info("Packages installed")
 
     def create_venv() -> None:
         if os.path.isdir(venv_dirpath):
@@ -32,7 +36,7 @@ def setup_venv(packages: list[parser.ModuleConfig], venv_dirpath: str) -> None:
         subprocess.check_call(
             shlex.split(f"python -m venv {venv_dirpath}"),
         )
-        print(
+        utils.info(
             f"Virtualenv created: run 'source {venv_dirpath}/bin/activate' to activate it"
         )
         exit(0)
@@ -48,7 +52,7 @@ def setup_venv(packages: list[parser.ModuleConfig], venv_dirpath: str) -> None:
         with open(".gitignore", "r") as f:
             gitignore = f.read().splitlines()
 
-    exclude_filepath = f"{conf.PY_SECSCAN_DIRNAME}/"
+    exclude_filepath = f"{settings.PY_SECSCAN_DIRNAME}/"
     if exclude_filepath not in gitignore:
         gitignore.append(exclude_filepath)
 
@@ -56,22 +60,22 @@ def setup_venv(packages: list[parser.ModuleConfig], venv_dirpath: str) -> None:
         f.write("\n".join(gitignore))
 
 
-def load_project_settings() -> parser.PySecScanConfig:
+def load_project_conf() -> configuration_parser.PySecScanConfig:
     try:
-        if not os.path.isfile(conf.DEFAULT_ENV["PY_SECSCAN_CONFIG_FILENAME"]):
+        if not os.path.isfile(settings.DEFAULT_ENV["PY_SECSCAN_CONFIG_FILENAME"]):
             raise Exception(
-                f"File {conf.DEFAULT_ENV['PY_SECSCAN_CONFIG_FILENAME']} not found"
+                f"File {settings.DEFAULT_ENV['PY_SECSCAN_CONFIG_FILENAME']} not found"
             )
 
-        project_settings = parser.PySecScanConfig.from_yaml(
-            conf.DEFAULT_ENV["PY_SECSCAN_CONFIG_FILENAME"]
+        project_settings = configuration_parser.PySecScanConfig.from_yaml(
+            settings.DEFAULT_ENV["PY_SECSCAN_CONFIG_FILENAME"]
         )
 
-        conf.setenv_from_dict(overwrite=True, **project_settings.env)
+        settings.setenv_from_dict(overwrite=True, **project_settings.env)
     except FileNotFoundError as e:
-        raise e
+        utils.exception(e)
     except Exception as e:
-        raise e
+        utils.exception(e)
     else:
         return project_settings
 
@@ -83,37 +87,53 @@ def run(package_name: str, args: list[str]) -> None:
         )
         return 0
     except subprocess.CalledProcessError as e:
-        print(f"Error running {package_name}: {e}")
+        utils.warning(f"Error running {package_name}: {e}")
         return e.returncode
 
 
 def main() -> bool:
     try:
-        conf.load_default_env()
+        settings.load_default_conf()
 
-        project_settings = load_project_settings()
+        project_settings = load_project_conf()
 
         setup_venv(
             project_settings.packages,
             project_settings.venv_dirpath,
         )
-        status = {}
+
         for package in project_settings.packages:
+            settings.RUNTIME_EXCUTION_STATUS.update(
+                package.name, settings.RunTimeAllowedExecutionStatus.RUNNING
+            )
+
             if not package.enabled:
+                settings.RUNTIME_EXCUTION_STATUS.update(
+                    package.name, settings.RunTimeAllowedExecutionStatus.DISABLED
+                )
                 continue
+
             returncode = run(package.name, package.args)
-            status[package.name] = returncode
-            if not package.on_error_continue and returncode != 0:
+
+            if returncode == 0:
+                settings.RUNTIME_EXCUTION_STATUS.update(
+                    package.name, settings.RunTimeAllowedExecutionStatus.COMPLETED
+                )
+                continue
+
+            settings.RUNTIME_EXCUTION_STATUS.update(
+                package.name, settings.RunTimeAllowedExecutionStatus.FAILED
+            )
+            if not package.on_error_continue:
                 sys.exit(returncode)
-
-        print(status)
-
     except KeyboardInterrupt as e:
-        raise e
+        utils.exception(e)
     except Exception as e:
-        raise e
+        utils.exception(e)
     else:
         return 0
+    finally:
+        utils.info(settings.RUNTIME_EXCUTION_STATUS)
 
 
 if __name__ == "__main__":
