@@ -1,9 +1,9 @@
-from dataclasses import dataclass, field
-from typing import Dict, Optional
-import os
 import logging
+import os
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Dict, Optional
 
 CURRENT_DIRPATH = os.getcwd()
 PY_SECSCAN_DIRNAME = ".py-secscan"
@@ -18,6 +18,7 @@ DEFAULT_ENV = {
     "PY_SECSCAN_LOGGING_FORMAT": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     "PY_SECSCAN_DATA": str(datetime.now().strftime("%Y-%m-%d")),
     "PY_SECSCAN_DATATIME_START": str(datetime.now().strftime("%Y-%m-%d %H:%m:%s")),
+    "PY_SECSCAN_DEBUG": "0",
 }
 
 LOGGER = logging.getLogger(DEFAULT_ENV["PY_SECSCAN__LOGGING_NAME"])
@@ -86,7 +87,7 @@ def setenv_from_dict(overwrite: bool = False, **kargs) -> None:
         raise Exception(f"Error load env var: {key}={str(value)}")
 
 
-def load_default_conf() -> None:
+def load_env() -> None:
     setenv_from_dict(overwrite=False, **DEFAULT_ENV)
     try:
         os.makedirs(DEFAULT_ENV["PY_SECSCAN_LOGGING_PATH"], exist_ok=True)

@@ -1,0 +1,20 @@
+options:
+  venv_dirpath: ".venv"
+  env:
+    A: "1"
+    B: "2"
+  security:
+    enabled: true
+    additional_allowed_packages: ["checkov"]
+
+packages:
+  - package_name: "ruff"
+    args: ["check", "--fix"]
+    on_error_continue: false
+  - package_name: "bandit"
+    args: ["-r", "."]
+    extras: ["toml"]
+    enabled: false
+  - package_name: "checkov"
+    enabled: false
+    args: ["--directory", "."]
