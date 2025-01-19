@@ -6,9 +6,11 @@ from typing import Dict, List, Optional
 
 import yaml
 
-from py_secscan.cli import settings, utils
+from py_secscan import settings
+from py_secscan import utils
+from py_secscan.parser import runtime
 
-ALLOWED_PACKAGES = [
+DEFAULT_ALLOWED_PACKAGES = [
     "ruff",
     "pylint",
     "bandit",
@@ -44,8 +46,13 @@ class SecurityConfig:
 
     @property
     def allowed_packages(self):
-        return self.additional_allowed_packages + (
-            [] if self.exclude_default_allowed_packages else ALLOWED_PACKAGES
+        return list(
+            set(self.additional_allowed_packages)
+            | set(
+                []
+                if self.exclude_default_allowed_packages
+                else DEFAULT_ALLOWED_PACKAGES
+            )
         )
 
 
@@ -153,14 +160,14 @@ class PySecScanConfig:
     def execute(self) -> None:
         try:
             for package in self.packages:
-                settings.RUNTIME_EXCUTION_STATUS.update(
-                    package.name, settings.RunTimeAllowedExecutionStatus.RUNNING
+                runtime.RUNTIME_EXCUTION_STATUS.update(
+                    package.name, runtime.RunTimeAllowedExecutionStatus.RUNNING
                 )
 
                 if not package.enabled:
                     utils.warning(f"{package.name} package is disabled")
-                    settings.RUNTIME_EXCUTION_STATUS.update(
-                        package.name, settings.RunTimeAllowedExecutionStatus.DISABLED
+                    runtime.RUNTIME_EXCUTION_STATUS.update(
+                        package.name, runtime.RunTimeAllowedExecutionStatus.DISABLED
                     )
                     continue
 
@@ -175,22 +182,22 @@ class PySecScanConfig:
 
                 if response.returncode == 0:
                     utils.info(f"Package {package.name} completed")
-                    settings.RUNTIME_EXCUTION_STATUS.update(
-                        package.name, settings.RunTimeAllowedExecutionStatus.COMPLETED
+                    runtime.RUNTIME_EXCUTION_STATUS.update(
+                        package.name, runtime.RunTimeAllowedExecutionStatus.COMPLETED
                     )
                     continue
 
                 print(response.stderr)
 
-                settings.RUNTIME_EXCUTION_STATUS.update(
-                    package.name, settings.RunTimeAllowedExecutionStatus.FAILED
+                runtime.RUNTIME_EXCUTION_STATUS.update(
+                    package.name, runtime.RunTimeAllowedExecutionStatus.FAILED
                 )
                 if not package.on_error_continue:
                     raise SubprocessFailed(package.name, package.args, response.args)
         except Exception as e:
             utils.exception(e)
         finally:
-            utils.info(settings.RUNTIME_EXCUTION_STATUS)
+            utils.info(runtime.RUNTIME_EXCUTION_STATUS)
 
     def __dict__(self) -> dict:
         return asdict(self)

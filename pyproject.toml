@@ -12,7 +12,7 @@ dev = [
 ]
 
 [project.scripts]
-py_secscan = "py_secscan:entrypoint"
+py_secscan = "py_secscan:main"
 
 [tool.uv.workspace]
 members = ["py-secscan"]

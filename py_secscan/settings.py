@@ -1,9 +1,6 @@
 import logging
 import os
-from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
-from typing import Dict, Optional
 
 CURRENT_DIRPATH = os.getcwd()
 PY_SECSCAN_DIRNAME = ".py-secscan"
@@ -25,39 +22,6 @@ LOGGER = logging.getLogger(DEFAULT_ENV["PY_SECSCAN__LOGGING_NAME"])
 LOGGER_FILEPATH = os.path.join(
     f"{DEFAULT_ENV['PY_SECSCAN_LOGGING_PATH']}/{DEFAULT_ENV['PY_SECSCAN__LOGGING_NAME']}.{DEFAULT_ENV['PY_SECSCAN_DATA']}.log"
 )
-
-
-class RunTimeAllowedExecutionStatus(Enum):
-    RUNNING = "running"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    DISABLED = "disabled"
-
-
-@dataclass
-class RunTimeExecutionStatus:
-    logger_filepath: Optional[str] = field(default=LOGGER_FILEPATH)
-    status: Optional[Dict] = field(default_factory=dict)
-
-    def update(self, key: str, value: RunTimeAllowedExecutionStatus) -> None:
-        if not isinstance(key, str):
-            raise Exception("Key param is not str")
-
-        if value.value not in RunTimeAllowedExecutionStatus:
-            raise Exception(
-                f"Value param is not allowed. Allowed values: {RunTimeAllowedExecutionStatus}"
-            )
-
-        self.status[key] = value.value
-
-    def to_dict(self) -> Dict:
-        return {"logger_filepath": self.logger_filepath, "status": self.status}
-
-    def __str__(self) -> str:
-        return str(self.to_dict())
-
-
-RUNTIME_EXCUTION_STATUS = RunTimeExecutionStatus()
 
 
 def setenv(key: str, value: str, overwrite: bool = False) -> None:

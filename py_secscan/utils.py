@@ -2,7 +2,7 @@ import shlex
 import subprocess
 from types import LambdaType
 
-from py_secscan.cli.settings import LOGGER
+from py_secscan.settings import LOGGER
 
 FORBIDDEN_OPERATORS = [
     "|",

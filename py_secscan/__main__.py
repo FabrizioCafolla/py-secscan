@@ -1,6 +1,6 @@
 import sys
 
-from . import entrypoint
+from . import main
 
 if __name__ == "__main__":
-    sys.exit(entrypoint())
+    sys.exit(main())
