@@ -1,8 +1,9 @@
 import argparse
 import os
 
-from py_secscan.parser import parser
+from py_secscan.cli import runtime
 from py_secscan import settings, utils
+from py_secscan.modules import sbom
 
 
 def main() -> bool:
@@ -11,16 +12,19 @@ def main() -> bool:
 
         argument_parser = argparse.ArgumentParser(description="PySecScan")
         argument_parser.add_argument(
-            "--conf-filename",
+            "-c",
+            "--config-filename",
             required=False,
             help="Path to the configuration file",
             default=os.environ["PY_SECSCAN_CONFIG_FILENAME"],
         )
         args = argument_parser.parse_args()
 
-        project_configuration = parser.build(args.conf_filename)
+        py_secscan_configuration = runtime.loader(args.config_filename)
 
-        project_configuration.execute()
+        py_secscan_configuration.execute()
+        sbom.create_sbom()
+
     except KeyboardInterrupt as e:
         utils.exception(e)
     except Exception as e:

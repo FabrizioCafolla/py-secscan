@@ -10,8 +10,12 @@ labelPRBasedOnFilePath:
     - pyproject.toml
 
   app:
-    - src/*
-    - src/**/*
+    - py_secscan/*
+    - py_secscan/**/*
+
+  test:
+    - tests/*
+    - tests/**/*
 
 firstPRWelcomeComment: >
   Thanks for opening this pull request! Please check out our contributing guidelines.

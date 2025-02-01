@@ -78,7 +78,6 @@ FORBIDDEN_COMMANDS = [
     "sed",
     "awk",
     "perl",
-    "python",
     "bash",
     "sh",
     "csh",
@@ -148,7 +147,11 @@ def sanitize_shell_command(
 
 
 def run_subprocess(
-    command: str, additional_control_raise_on_success: LambdaType = None
+    command: str,
+    additional_control_raise_on_success: LambdaType = None,
+    print_stdout: bool = True,
+    print_stderror: bool = True,
+    raise_on_failure: bool = False,
 ) -> subprocess.CompletedProcess:
     command_shlex = sanitize_shell_command(command, additional_control_raise_on_success)
 
@@ -158,5 +161,16 @@ def run_subprocess(
         text=True,
         check=False,
     )
+
+    if print_stdout:
+        print(response.stdout)
+
+    if response.returncode != 0:
+        print(response.stderr)
+        if raise_on_failure:
+            error(f"Command failed: {command}")
+            error(f"Command failed with return code: {response.returncode}")
+            error(f"Command failed with stderr: {response.stderr}")
+            exception(message=f"Command failed: {command}")
 
     return response

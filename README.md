@@ -1,6 +1,6 @@
 # PY SecScan
 
-PySecScan is the tool that allows you to perform security scans in your Python project through a YAML configuration.
+PySecScan is the tool that allows you to perform security scans in your Python project through a simple YAML configuration.
 
 ## Usage
 

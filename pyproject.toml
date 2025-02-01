@@ -1,9 +1,14 @@
 [project]
 name = "py-secscan"
 version = "0.1.0"
-description = "Add your description here"
+description = "PySecScan is the tool that allows you to perform security scans in your Python project through a simple YAML configuration."
 readme = "README.md"
 requires-python = ">=3.9"
+dependencies = [
+    "cyclonedx-bom>=5.1.2",
+    "pyyaml>=6.0.2",
+    "requests>=2.32.3",
+]
 
 [dependency-groups]
 dev = [

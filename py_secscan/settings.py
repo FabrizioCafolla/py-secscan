@@ -4,10 +4,12 @@ from datetime import datetime
 
 CURRENT_DIRPATH = os.getcwd()
 PY_SECSCAN_DIRNAME = ".py-secscan"
+VEVN_DIRNAME = ".venv"
 
 DEFAULT_ENV = {
     "PY_SECSCAN_CONFIG_FILENAME": ".py-secscan.conf.yml",
     "PY_SECSCAN_PATH": os.path.join(f"{CURRENT_DIRPATH}/{PY_SECSCAN_DIRNAME}"),
+    "PY_SECSCAN_VENV": os.path.join(f"{CURRENT_DIRPATH}/{VEVN_DIRNAME}"),
     "PY_SECSCAN_LOGGING_PATH": os.path.join(
         f"{CURRENT_DIRPATH}/{PY_SECSCAN_DIRNAME}/logs"
     ),
