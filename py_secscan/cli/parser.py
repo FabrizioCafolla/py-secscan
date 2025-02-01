@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import yaml
+import jsonschema
+import json
 
 from py_secscan import settings
 from py_secscan import utils
@@ -17,7 +19,48 @@ DEFAULT_ALLOWED_PACKAGES = [
     "bandit",
     "pre-commit",
     "checkov",
+    "cyclonedx-py",
+    "safety",
+    "pip-audit",
+    "osv-scanner",
 ]
+
+
+class ParserBase:
+    def __post_init__(self):
+        """The validation is performed by calling a function named:
+        `validate_<field_name>(self, value, field) -> field.type`
+        """
+        for field_name, _ in self.__dataclass_fields__.items():
+            if method := getattr(self, f"validate_{field_name}", None):
+                setattr(self, field_name, method(getattr(self, field_name)))
+
+
+class SchemaLoader:
+    _schema = None
+
+    @classmethod
+    def load_schema(cls, schema_filename: str):
+        if cls._schema is None:
+            schema_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), schema_filename
+            )
+
+            try:
+                with open(schema_path, "r") as f:
+                    cls._schema = json.load(f)
+            except Exception as e:
+                utils.exception(f"Failed to load jsonschema file: {str(e)}")
+
+        return cls._schema
+
+    @classmethod
+    def validate(cls, schema_filename: str, instance: dict):
+        schema = cls.load_schema(schema_filename)
+        try:
+            jsonschema.validate(instance=instance, schema=schema)
+        except jsonschema.exceptions.ValidationError as e:
+            utils.exception(f"Configuration validation failed: {str(e)}")
 
 
 class ExceptionParserPackageExecutionError(Exception):
@@ -40,91 +83,109 @@ class ExceptionParserPackageExecutionError(Exception):
 
 
 @dataclass
-class PySecScanConfig:
-    version: Optional[str] = None
+class OptionsConfigV1(ParserBase):
+    @dataclass
+    class SecurityConfigV1:
+        enabled: Optional[bool] = True
+        additional_allowed_packages: Optional[List[str]] = field(default_factory=list)
+        exclude_default_allowed_packages: Optional[bool] = False
 
-    def execute(self):
-        raise NotImplementedError
+        @property
+        def allowed_packages(self):
+            default_allowed_package = (
+                []
+                if self.exclude_default_allowed_packages
+                else DEFAULT_ALLOWED_PACKAGES
+            )
+            return list(
+                set(self.additional_allowed_packages) | set(default_allowed_package)
+            )
 
-
-@dataclass
-class SecurityConfigV1:
-    enabled: Optional[bool] = True
-    additional_allowed_packages: Optional[List[str]] = field(default_factory=list)
-    exclude_default_allowed_packages: Optional[bool] = False
-
-    @property
-    def allowed_packages(self):
-        default_allowed_package = (
-            [] if self.exclude_default_allowed_packages else DEFAULT_ALLOWED_PACKAGES
-        )
-        return list(
-            set(self.additional_allowed_packages) | set(default_allowed_package)
-        )
-
-
-@dataclass
-class OptionsConfigV1:
     debug: Optional[bool] = False
     env: Optional[Dict[str, str]] = field(default_factory=dict)
     venv_dirpath: Optional[str] = field(default=settings.DEFAULT_ENV["PY_SECSCAN_VENV"])
     security: Optional[SecurityConfigV1] = field(default_factory=SecurityConfigV1)
 
+    def __post_init__(self):
+        if not isinstance(self.security, self.SecurityConfigV1):
+            self.security = self.SecurityConfigV1(**self.security)
+
 
 @dataclass
-class ModuleConfigV1:
-    package_name: str = None
-    # Use the name of the package if not provided. If package name is different from the command name, provide the command name
-    command_name: Optional[str] = None
-    version: Optional[str] = None
-    enabled: Optional[bool] = True
-    args: Optional[List[str]] = field(default_factory=list)
-    extras: Optional[List[str]] = field(default_factory=list)
+class PackageConfigV1(ParserBase):
+    @dataclass
+    class InstallConfigV1:
+        package_name: str
+        version: Optional[str] = None
+        extras: Optional[List[str]] = field(default_factory=list)
+
+    type: str
     on_error_continue: Optional[bool] = True
+    enabled: Optional[bool] = True
+    install: Optional[InstallConfigV1] = None
+    command_name: Optional[str] = None
+    command_args: Optional[List[str]] = field(default_factory=list)
 
     @property
     def name(self) -> str:
-        return self.command_name if self.command_name else self.package_name
+        return self.command_name
+
+    @property
+    def args(self) -> List[str]:
+        return self.command_args
+
+    def __post_init__(self):
+        super().__post_init__()
+
+        if not isinstance(self.install, self.InstallConfigV1):
+            self.install = self.InstallConfigV1(**self.install)
+
+    def validate_type(self, value, **_):
+        if value not in ["python", "bin"]:
+            raise ValueError(f"Invalid type: {value}")
 
 
 @dataclass
-class PySecScanConfigV1(PySecScanConfig):
-    version: str = "1"
-    options: Optional[OptionsConfigV1] = None
-    packages: Optional[List[ModuleConfigV1]] = field(default_factory=list)
+class PySecScanConfigBase(ParserBase):
+    version: str
+    jsonschema: str
 
-    def __post_init__(self):
-        self.setup_venv()
-
-        settings.setenv_from_dict(overwrite=True, **self.options.env)
-
-        if self.options.debug:
-            utils.debug("Debug mode enabled")
-            settings.setenv("PY_SECSCAN_DEBUG", "1")
-        else:
-            sys.tracebacklimit = 0
+    def execute(self):
+        raise NotImplementedError
 
     @classmethod
-    def from_yaml(cls, py_secscan_config_filename: Path) -> "PySecScanConfig":
+    def from_yaml(cls, py_secscan_config_filename: Path) -> "PySecScanConfigBase":
+        if not os.path.isfile(py_secscan_config_filename):
+            raise FileNotFoundError(f"File {py_secscan_config_filename} not found")
+
         with open(py_secscan_config_filename) as f:
             data = yaml.safe_load(f)
 
-        if "packages" in data:
-            data["packages"] = [
-                ModuleConfigV1(**module) for module in data.get("packages", [])
-            ]
-
-        if "options" in data:
-            if "security" in data["options"]:
-                data["options"]["security"] = SecurityConfigV1(
-                    **data["options"]["security"]
-                )
-
-            data["options"] = OptionsConfigV1(**data["options"])
+        SchemaLoader.validate(cls.jsonschema, data)
 
         return cls(**data)
 
-    def setup_venv(self) -> None:
+
+@dataclass
+class PySecScanConfigBaseV1(PySecScanConfigBase):
+    version: str = "1"
+    jsonschema: str = "pysecscan-1.schema.json"
+    options: Optional[OptionsConfigV1] = None
+    packages: Optional[List[PackageConfigV1]] = field(default_factory=list)
+
+    def __post_init__(self):
+        if not isinstance(self.options, OptionsConfigV1):
+            self.options = OptionsConfigV1(**self.options)
+
+        packages = []
+        for package in self.packages:
+            if not isinstance(package, PackageConfigV1):
+                packages.append(PackageConfigV1(**package))
+        self.packages = packages
+
+        self.load()
+
+    def load(self) -> None:
         if not os.path.isdir(self.options.venv_dirpath):
             utils.run_subprocess(
                 f"{sys.executable} -m venv {self.options.venv_dirpath}",
@@ -141,15 +202,18 @@ class PySecScanConfigV1(PySecScanConfig):
             f"{settings.DEFAULT_ENV['PY_SECSCAN_PATH']}/requirements.txt", "w"
         ) as f:
             for package in self.packages:
+                if not package.install:
+                    continue
+
                 line = (
-                    f"{package.package_name}=={package.version}"
-                    if package.version
-                    else package.package_name
+                    f"{package.install.package_name}=={package.install.version}"
+                    if package.install.version
+                    else package.install.package_name
                 )
                 f.write(f"{line}\n")
 
-                for extra in package.extras:
-                    f.write(f"{package.package_name}[{extra}]\n")
+                for extra in package.install.extras:
+                    f.write(f"{package.install.package_name}[{extra}]\n")
 
         utils.run_subprocess(
             f"{sys.executable} -m ensurepip --upgrade",
@@ -174,6 +238,14 @@ class PySecScanConfigV1(PySecScanConfig):
 
         with open(".gitignore", "w") as f:
             f.write("\n".join(gitignore))
+
+        settings.setenv_from_dict(overwrite=True, **self.options.env)
+
+        if self.options.debug:
+            utils.debug("Debug mode enabled")
+            settings.setenv("PY_SECSCAN_DEBUG", "1")
+        else:
+            sys.tracebacklimit = 0
 
     def execute(self) -> None:
         try:
@@ -220,17 +292,27 @@ class PySecScanConfigV1(PySecScanConfig):
 
 
 class Parser:
-    py_secscan_config_filename: str
-    py_secscan_config: PySecScanConfig
+    parser_versions = {
+        "1": PySecScanConfigBaseV1,
+    }
 
-    def __init__(self, py_secscan_config_filename: str):
+    py_secscan_config_filename: str
+    py_secscan_config: PySecScanConfigBase
+
+    @property
+    def config(self) -> PySecScanConfigBase:
+        return self.py_secscan_config
+
+    def __init__(self, py_secscan_config_filename: str, auto_build: bool = True):
         if not os.path.isfile(py_secscan_config_filename):
             raise FileNotFoundError(f"File {py_secscan_config_filename} not found")
 
         self.py_secscan_config_filename = py_secscan_config_filename
-        self.py_secscan_config = self.build()
 
-    def build(self) -> PySecScanConfig:
+        if auto_build:
+            self.build()
+
+    def build(self) -> PySecScanConfigBase:
         try:
             if not os.path.isfile(self.py_secscan_config_filename):
                 raise FileNotFoundError(
@@ -243,10 +325,12 @@ class Parser:
             if "version" not in data:
                 raise ValueError("Version not found in the configuration file")
 
-            if data["version"] == "1":
-                return PySecScanConfigV1.from_yaml(self.py_secscan_config_filename)
+            if data["version"] not in self.parser_versions:
+                raise ValueError(f"Version {data['version']} not supported")
 
-            raise ValueError(f"Version {data['version']} not supported")
+            self.py_secscan_config = (self.parser_versions[data["version"]]).from_yaml(
+                self.py_secscan_config_filename
+            )
         except FileNotFoundError as e:
             utils.exception(e)
         except Exception as e:

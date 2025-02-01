@@ -459,6 +459,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "cyclonedx-bom", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "jsonschema", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pyyaml", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "requests", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
@@ -472,6 +473,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "cyclonedx-bom", specifier = ">=5.1.2" },
+    { name = "jsonschema", specifier = ">=4.23.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "requests", specifier = ">=2.32.3" },
 ]

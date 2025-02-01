@@ -1,20 +1,29 @@
+version: "1"
+
 options:
-  venv_dirpath: ".venv"
+  venv_dirpath: "tests/.venv"
   env:
     A: "1"
     B: "2"
   security:
     enabled: true
-    additional_allowed_packages: ["checkov"]
-
+    additional_allowed_packages: ["cyclonedx-py"]
 packages:
-  - package_name: "ruff"
-    args: ["check", "--fix"]
+  - type: "python"
+    install:
+      package_name: "ruff"
+    command_name: "ruff"
+    command_args: ["check", "--fix"]
     on_error_continue: false
-  - package_name: "bandit"
-    args: ["-r", "."]
-    extras: ["toml"]
+  - type: "python"
+    install:
+      package_name: "bandit"
+      extras: ["toml"]
+    command_name: "bandit"
+    command_args: ["-r", "."]
     enabled: false
-  - package_name: "checkov"
-    enabled: false
-    args: ["--directory", "."]
+  - type: "python"
+    install:
+      package_name: "cyclonedx-bom"
+    command_name: "cyclonedx-py"
+    command_args: ["environment", "--outfile", "test.json"]

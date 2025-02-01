@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "cyclonedx-bom>=5.1.2",
+    "jsonschema>=4.23.0",
     "pyyaml>=6.0.2",
     "requests>=2.32.3",
 ]
@@ -17,7 +18,7 @@ dev = [
 ]
 
 [project.scripts]
-py_secscan = "py_secscan:main"
+py_secscan = "py_secscan:entrypoint"
 
 [tool.uv.workspace]
 members = ["py-secscan"]
