@@ -9,8 +9,9 @@ import jsonschema
 import json
 
 from py_secscan import settings
-from py_secscan import utils
-from py_secscan.cli import runtime
+from py_secscan import process
+from py_secscan import stdx
+from py_secscan.cli import status
 
 
 DEFAULT_ALLOWED_PACKAGES = [
@@ -50,7 +51,7 @@ class SchemaLoader:
                 with open(schema_path, "r") as f:
                     cls._schema = json.load(f)
             except Exception as e:
-                utils.exception(f"Failed to load jsonschema file: {str(e)}")
+                stdx.exception(f"Failed to load jsonschema file: {str(e)}")
 
         return cls._schema
 
@@ -60,7 +61,7 @@ class SchemaLoader:
         try:
             jsonschema.validate(instance=instance, schema=schema)
         except jsonschema.exceptions.ValidationError as e:
-            utils.exception(f"Configuration validation failed: {str(e)}")
+            stdx.exception(f"Configuration validation failed: {str(e)}")
 
 
 class ExceptionParserPackageExecutionError(Exception):
@@ -187,11 +188,11 @@ class PySecScanConfigBaseV1(PySecScanConfigBase):
 
     def load(self) -> None:
         if not os.path.isdir(self.options.venv_dirpath):
-            utils.run_subprocess(
+            process.run_subprocess(
                 f"{sys.executable} -m venv {self.options.venv_dirpath}",
                 raise_on_failure=True,
             )
-            utils.warning(
+            stdx.warning(
                 f"Virtualenv created: run 'source {self.options.venv_dirpath}/bin/activate' to activate it"
             )
             sys.exit(0)
@@ -215,12 +216,12 @@ class PySecScanConfigBaseV1(PySecScanConfigBase):
                 for extra in package.install.extras:
                     f.write(f"{package.install.package_name}[{extra}]\n")
 
-        utils.run_subprocess(
+        process.run_subprocess(
             f"{sys.executable} -m ensurepip --upgrade",
             raise_on_failure=True,
         )
 
-        utils.run_subprocess(
+        process.run_subprocess(
             f"{sys.executable} -m pip install -r {settings.DEFAULT_ENV['PY_SECSCAN_PATH']}/requirements.txt",
             raise_on_failure=True,
         )
@@ -242,7 +243,7 @@ class PySecScanConfigBaseV1(PySecScanConfigBase):
         settings.setenv_from_dict(overwrite=True, **self.options.env)
 
         if self.options.debug:
-            utils.debug("Debug mode enabled")
+            process.debug("Debug mode enabled")
             settings.setenv("PY_SECSCAN_DEBUG", "1")
         else:
             sys.tracebacklimit = 0
@@ -250,42 +251,42 @@ class PySecScanConfigBaseV1(PySecScanConfigBase):
     def execute(self) -> None:
         try:
             for package in self.packages:
-                runtime.ExecutionStatus().update(
-                    package.name, runtime.ExecutionStatusAllowed.RUNNING
+                status.ExecutionStatusInstance.update(
+                    package.name, status.ExecutionStatusAllowed.RUNNING
                 )
 
                 if not package.enabled:
-                    utils.warning(f"{package.name} package is disabled")
-                    runtime.ExecutionStatus().update(
-                        package.name, runtime.ExecutionStatusAllowed.DISABLED
+                    stdx.warning(f"{package.name} package is disabled")
+                    status.ExecutionStatusInstance.update(
+                        package.name, status.ExecutionStatusAllowed.DISABLED
                     )
                     continue
 
-                utils.info(f"Running {package.name}")
+                stdx.info(f"Running {package.name}")
 
-                response = utils.run_subprocess(
+                response = process.run_subprocess(
                     " ".join([package.name] + package.args),
                     lambda cmd: cmd[0] not in self.options.security.allowed_packages,
                 )
 
                 if response.returncode == 0:
-                    utils.info(f"Package {package.name} completed")
-                    runtime.ExecutionStatus().update(
-                        package.name, runtime.ExecutionStatusAllowed.COMPLETED
+                    stdx.info(f"Package {package.name} completed")
+                    status.ExecutionStatusInstance.update(
+                        package.name, status.ExecutionStatusAllowed.COMPLETED
                     )
                     continue
 
-                runtime.ExecutionStatus().update(
-                    package.name, runtime.ExecutionStatusAllowed.FAILED
+                status.ExecutionStatusInstance.update(
+                    package.name, status.ExecutionStatusAllowed.FAILED
                 )
                 if not package.on_error_continue:
                     raise ExceptionParserPackageExecutionError(
                         package.name, package.args, response.args
                     )
         except Exception as e:
-            utils.exception(e)
+            stdx.exception(e)
         finally:
-            utils.info(runtime.ExecutionStatus())
+            stdx.info(status.ExecutionStatusInstance)
 
     def __dict__(self) -> dict:
         return asdict(self)
@@ -332,7 +333,7 @@ class Parser:
                 self.py_secscan_config_filename
             )
         except FileNotFoundError as e:
-            utils.exception(e)
+            stdx.exception(e)
         except Exception as e:
-            utils.exception(e)
+            stdx.exception(e)
         return None
