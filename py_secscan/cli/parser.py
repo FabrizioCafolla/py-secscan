@@ -14,17 +14,7 @@ from py_secscan import stdx
 from py_secscan.cli import status
 
 
-DEFAULT_ALLOWED_PACKAGES = [
-    "ruff",
-    "pylint",
-    "bandit",
-    "pre-commit",
-    "checkov",
-    "cyclonedx-py",
-    "safety",
-    "pip-audit",
-    "osv-scanner",
-]
+DEFAULT_ALLOWED_PACKAGES = ["ruff", "cyclonedx-py"]
 
 
 class ParserBase:
@@ -35,6 +25,9 @@ class ParserBase:
         for field_name, _ in self.__dataclass_fields__.items():
             if method := getattr(self, f"validate_{field_name}", None):
                 setattr(self, field_name, method(getattr(self, field_name)))
+
+    def __dict__(self) -> dict:
+        return asdict(self)
 
 
 class SchemaLoader:
@@ -64,25 +57,6 @@ class SchemaLoader:
             stdx.exception(f"Configuration validation failed: {str(e)}")
 
 
-class ExceptionParserPackageExecutionError(Exception):
-    def __init__(
-        self,
-        package_name: str,
-        package_args: List[str],
-        command: list[str] = None,
-        *args,
-        **kwargs,
-    ):
-        self.package = package_name
-        self.args = args
-        self.command = " ".join(command) if command else None
-        self.message = (
-            f"Error executing package {package_name} with args {package_args}"
-            + (f"\n{self.command}" if self.command else "")
-        )
-        super().__init__(self.message, *args, **kwargs)
-
-
 @dataclass
 class OptionsConfigV1(ParserBase):
     @dataclass
@@ -104,6 +78,9 @@ class OptionsConfigV1(ParserBase):
 
     debug: Optional[bool] = False
     env: Optional[Dict[str, str]] = field(default_factory=dict)
+    pysecscan_dirpath: Optional[str] = field(
+        default=settings.DEFAULT_ENV["PY_SECSCAN_PATH"]
+    )
     venv_dirpath: Optional[str] = field(default=settings.DEFAULT_ENV["PY_SECSCAN_VENV"])
     security: Optional[SecurityConfigV1] = field(default_factory=SecurityConfigV1)
 
@@ -116,16 +93,19 @@ class OptionsConfigV1(ParserBase):
 class PackageConfigV1(ParserBase):
     @dataclass
     class InstallConfigV1:
-        package_name: str
+        package_name: str = None
         version: Optional[str] = None
         extras: Optional[List[str]] = field(default_factory=list)
 
-    type: str
+    command_name: Optional[str]
     on_error_continue: Optional[bool] = True
     enabled: Optional[bool] = True
     install: Optional[InstallConfigV1] = None
-    command_name: Optional[str] = None
     command_args: Optional[List[str]] = field(default_factory=list)
+
+    @property
+    def package_type(self) -> str:
+        return self.type
 
     @property
     def name(self) -> str:
@@ -138,8 +118,12 @@ class PackageConfigV1(ParserBase):
     def __post_init__(self):
         super().__post_init__()
 
-        if not isinstance(self.install, self.InstallConfigV1):
-            self.install = self.InstallConfigV1(**self.install)
+        if self.install:
+            if not isinstance(self.install, self.InstallConfigV1):
+                self.install = self.InstallConfigV1(**self.install)
+
+            if not self.install.package_name:
+                self.install.package_name = self.command_name
 
     def validate_type(self, value, **_):
         if value not in ["python", "bin"]:
@@ -150,6 +134,9 @@ class PackageConfigV1(ParserBase):
 class PySecScanConfigBase(ParserBase):
     version: str
     jsonschema: str
+
+    def __post_init__(self):
+        super().__post_init__()
 
     def execute(self):
         raise NotImplementedError
@@ -168,87 +155,104 @@ class PySecScanConfigBase(ParserBase):
 
 
 @dataclass
-class PySecScanConfigBaseV1(PySecScanConfigBase):
+class PySecScanConfigV1(PySecScanConfigBase):
     version: str = "1"
     jsonschema: str = "pysecscan-1.schema.json"
     options: Optional[OptionsConfigV1] = None
     packages: Optional[List[PackageConfigV1]] = field(default_factory=list)
 
     def __post_init__(self):
+        super().__post_init__()
+
         if not isinstance(self.options, OptionsConfigV1):
             self.options = OptionsConfigV1(**self.options)
 
         packages = []
         for package in self.packages:
             if not isinstance(package, PackageConfigV1):
-                packages.append(PackageConfigV1(**package))
+                package = PackageConfigV1(**package)
+                packages.append(package)
+
+            if (
+                package.command_name
+                not in self.options.security.additional_allowed_packages
+            ):
+                self.options.security.additional_allowed_packages.append(
+                    package.command_name
+                )
+
         self.packages = packages
 
-        self.load()
+    def setup(self) -> None:
+        def _setup_venv_dirpath() -> str:
+            # Ensure the environment variable is set to the correct value
+            settings.setenv("PY_SECSCAN_PATH", self.options.pysecscan_dirpath)
+            settings.setenv("PY_SECSCAN_VENV", self.options.venv_dirpath)
 
-    def load(self) -> None:
-        if not os.path.isdir(self.options.venv_dirpath):
+            if not os.path.isdir(self.options.venv_dirpath):
+                process.run_subprocess(
+                    f"{sys.executable} -m venv {self.options.venv_dirpath}",
+                    raise_on_failure=True,
+                )
+                stdx.warning(
+                    f"Virtualenv created: run 'source {self.options.venv_dirpath}/bin/activate' to activate it"
+                )
+                sys.exit(0)
+
+            with open(f"{self.options.pysecscan_dirpath}/requirements.txt", "w") as f:
+                for package in self.packages:
+                    if not package.install:
+                        continue
+
+                    line = (
+                        f"{package.install.package_name}=={package.install.version}"
+                        if package.install.version
+                        else package.install.package_name
+                    )
+                    f.write(f"{line}\n")
+
+                    for extra in package.install.extras:
+                        f.write(f"{package.install.package_name}[{extra}]\n")
+
             process.run_subprocess(
-                f"{sys.executable} -m venv {self.options.venv_dirpath}",
+                f"{sys.executable} -m ensurepip --upgrade",
                 raise_on_failure=True,
             )
-            stdx.warning(
-                f"Virtualenv created: run 'source {self.options.venv_dirpath}/bin/activate' to activate it"
+
+            process.run_subprocess(
+                f"{sys.executable} -m pip install -r {settings.DEFAULT_ENV['PY_SECSCAN_PATH']}/requirements.txt",
+                raise_on_failure=True,
             )
-            sys.exit(0)
 
-        settings.setenv("PY_SECSCAN_PATH", self.options.venv_dirpath)
+        def _setup_gitignore() -> None:
+            # Create a .gitignore file in the root directory if it does not exist, and add the exclusion line if not already present
+            gitignore = (
+                open(".gitignore").read().splitlines()
+                if os.path.isfile(".gitignore")
+                else []
+            )
+            exclude_filepath = f"{settings.PY_SECSCAN_DIRNAME}/"
 
-        with open(
-            f"{settings.DEFAULT_ENV['PY_SECSCAN_PATH']}/requirements.txt", "w"
-        ) as f:
-            for package in self.packages:
-                if not package.install:
-                    continue
+            if exclude_filepath not in gitignore:
+                gitignore.append(exclude_filepath)
 
-                line = (
-                    f"{package.install.package_name}=={package.install.version}"
-                    if package.install.version
-                    else package.install.package_name
-                )
-                f.write(f"{line}\n")
+            with open(".gitignore", "w") as f:
+                f.write("\n".join(gitignore))
 
-                for extra in package.install.extras:
-                    f.write(f"{package.install.package_name}[{extra}]\n")
+        def _load_env() -> None:
+            settings.setenv_from_dict(overwrite=True, **self.options.env)
 
-        process.run_subprocess(
-            f"{sys.executable} -m ensurepip --upgrade",
-            raise_on_failure=True,
-        )
+            if self.options.debug or os.environ.get("PY_SECSCAN_DEBUG") == "1":
+                settings.set_debug_mode()
+                return
 
-        process.run_subprocess(
-            f"{sys.executable} -m pip install -r {settings.DEFAULT_ENV['PY_SECSCAN_PATH']}/requirements.txt",
-            raise_on_failure=True,
-        )
-
-        # Create a .gitignore file in the root directory if it does not exist, and add the exclusion line if not already present
-        gitignore = (
-            open(".gitignore").read().splitlines()
-            if os.path.isfile(".gitignore")
-            else []
-        )
-        exclude_filepath = f"{settings.PY_SECSCAN_DIRNAME}/"
-
-        if exclude_filepath not in gitignore:
-            gitignore.append(exclude_filepath)
-
-        with open(".gitignore", "w") as f:
-            f.write("\n".join(gitignore))
-
-        settings.setenv_from_dict(overwrite=True, **self.options.env)
-
-        if self.options.debug:
-            process.debug("Debug mode enabled")
-            settings.setenv("PY_SECSCAN_DEBUG", "1")
-        else:
             sys.tracebacklimit = 0
 
-    def execute(self) -> None:
+        _load_env()
+        _setup_gitignore()
+        _setup_venv_dirpath()
+
+    def execute_packages(self) -> None:
         try:
             for package in self.packages:
                 status.ExecutionStatusInstance.update(
@@ -265,8 +269,9 @@ class PySecScanConfigBaseV1(PySecScanConfigBase):
                 stdx.info(f"Running {package.name}")
 
                 response = process.run_subprocess(
-                    " ".join([package.name] + package.args),
-                    lambda cmd: cmd[0] not in self.options.security.allowed_packages,
+                    command=" ".join([package.name] + package.args),
+                    additional_control_raise_on_success=lambda cmd: cmd[0]
+                    not in self.options.security.allowed_packages,
                 )
 
                 if response.returncode == 0:
@@ -280,7 +285,7 @@ class PySecScanConfigBaseV1(PySecScanConfigBase):
                     package.name, status.ExecutionStatusAllowed.FAILED
                 )
                 if not package.on_error_continue:
-                    raise ExceptionParserPackageExecutionError(
+                    raise stdx.ParserPackageExecutionException(
                         package.name, package.args, response.args
                     )
         except Exception as e:
@@ -288,13 +293,14 @@ class PySecScanConfigBaseV1(PySecScanConfigBase):
         finally:
             stdx.info(status.ExecutionStatusInstance)
 
-    def __dict__(self) -> dict:
-        return asdict(self)
+    def execute(self) -> None:
+        self.setup()
+        self.execute_packages()
 
 
 class Parser:
     parser_versions = {
-        "1": PySecScanConfigBaseV1,
+        "1": PySecScanConfigV1,
     }
 
     py_secscan_config_filename: str

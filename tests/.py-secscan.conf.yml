@@ -1,29 +1,28 @@
 version: "1"
 
 options:
+  debug: false
   venv_dirpath: "tests/.venv"
   env:
-    A: "1"
+    A: "$(echo 'C')"
     B: "2"
   security:
     enabled: true
     additional_allowed_packages: ["cyclonedx-py"]
+
 packages:
-  - type: "python"
-    install:
-      package_name: "ruff"
-    command_name: "ruff"
-    command_args: ["check", "--fix"]
+  - command_name: "echo"
+    command_args: ["ciao", "${A}", "${B}"]
     on_error_continue: false
-  - type: "python"
-    install:
-      package_name: "bandit"
+  - command_name: "ruff"
+    command_args: ["check", "--fix"]
+    on_error_continue: true
+  - install:
       extras: ["toml"]
     command_name: "bandit"
     command_args: ["-r", "."]
     enabled: false
-  - type: "python"
-    install:
+  - install:
       package_name: "cyclonedx-bom"
     command_name: "cyclonedx-py"
     command_args: ["environment", "--outfile", "test.json"]

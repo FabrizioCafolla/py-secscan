@@ -11,6 +11,7 @@ class StoreVerbosityParser(argparse.Action):
         if option_string == "-vv":
             values = "2"
         elif option_string == "-vvv":
+            settings.set_debug_mode()
             values = "3"
         else:
             values = "1"

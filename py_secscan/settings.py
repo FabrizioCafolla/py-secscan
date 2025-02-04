@@ -69,3 +69,9 @@ def load_env() -> None:
     except Exception as e:
         print(str(e))
         exit(1)
+
+
+def set_debug_mode() -> None:
+    setenv("PY_SECSCAN_DEBUG", "1", overwrite=True)
+    setenv("PY_SECSCAN_VERBOSITY", "3", overwrite=True)
+    LOGGER.debug("Debug mode enabled")

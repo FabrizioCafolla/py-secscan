@@ -62,13 +62,8 @@
   "definitions": {
     "package": {
       "type": "object",
-      "required": ["type", "command_name"],
+      "required": ["command_name"],
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": ["python", "bin"],
-          "default": "python"
-        },
         "install": {
           "type": "object",
           "properties": {
