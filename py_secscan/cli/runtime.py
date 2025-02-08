@@ -9,11 +9,12 @@ import os
 import yaml
 
 
-class ParserBuilder:
-    parser_versions = {
-        "1": PySecScanConfigV1,
-    }
+ALLOWED_PARSER_VERSIONS = {
+    "1": PySecScanConfigV1,
+}
 
+
+class RuntimeParserBuilder:
     py_secscan_config_filename: str
     py_secscan_config: PySecScanConfigBase
 
@@ -42,10 +43,10 @@ class ParserBuilder:
             if "version" not in data:
                 raise ValueError("Version not found in the configuration file")
 
-            if data["version"] not in self.parser_versions:
+            if data["version"] not in ALLOWED_PARSER_VERSIONS:
                 raise ValueError(f"Version {data['version']} not supported")
 
-            return (self.parser_versions[data["version"]]).from_yaml(
+            return (ALLOWED_PARSER_VERSIONS[data["version"]]).from_yaml(
                 self.py_secscan_config_filename
             )
         except FileNotFoundError as e:
@@ -92,7 +93,7 @@ def main() -> bool:
         )
         args = argument_parser.parse_args()
 
-        parser = ParserBuilder(args.config_filename)
+        parser = RuntimeParserBuilder(args.config_filename)
         py_secscan = parser.instance
         py_secscan.execute()
     except KeyboardInterrupt as e:

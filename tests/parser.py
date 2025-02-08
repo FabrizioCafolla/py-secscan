@@ -1,6 +1,6 @@
 import pytest
 from py_secscan.settings import load_env
-from py_secscan.cli.runtime import ParserBuilder
+from py_secscan.cli.runtime import RuntimeParserBuilder
 from py_secscan.cli.parser_base import PySecScanConfigBase
 from py_secscan.cli.parser_config_v1 import PySecScanConfigV1
 from py_secscan.stdx import PySecScanVirtualVenvNotLoadedException
@@ -50,7 +50,7 @@ def nonexistent_config_path(tmp_path):
 
 
 def test_valid_config(valid_config_path):
-    parser = ParserBuilder(str(valid_config_path))
+    parser = RuntimeParserBuilder(str(valid_config_path))
     py_secscan = parser.instance
 
     assert isinstance(py_secscan, PySecScanConfigBase)
@@ -79,9 +79,9 @@ def test_valid_config(valid_config_path):
 
 def test_invalid_config(invalid_config_path):
     with pytest.raises(ValueError):
-        ParserBuilder(str(invalid_config_path))
+        RuntimeParserBuilder(str(invalid_config_path))
 
 
 def test_nonexistent_config(nonexistent_config_path):
     with pytest.raises(FileNotFoundError):
-        ParserBuilder(str(nonexistent_config_path))
+        RuntimeParserBuilder(str(nonexistent_config_path))

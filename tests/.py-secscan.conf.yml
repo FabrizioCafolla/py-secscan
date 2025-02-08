@@ -4,11 +4,11 @@ options:
   debug: false
   venv_dirpath: "tests/.venv"
   env:
-    A: "$(echo 'C')"
+    # A: "$(echo 'C')"
     B: "2"
   security:
     enabled: true
-    disable_venv_check: true
+    # disable_venv_check: true
     # additional_forbbiden_commands: ["echo"]
 
 packages:
