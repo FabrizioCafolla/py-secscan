@@ -106,16 +106,17 @@ def interpolate(value: str, additional_variables: dict = {}):
 def sanitize_shell_command(
     command: str,
     additional_control_raise_on_success: LambdaType = None,
-    interpolate_enabled: bool = True,
+    additional_forbbiden_commands: list = [],
+    enable_interpolate: bool = True,
 ) -> str:
     cmd = (
         [interpolate(item) for item in shlex.split(command)]
-        if interpolate_enabled
+        if enable_interpolate
         else shlex.split(command)
     )
 
-    if cmd[0] in FORBIDDEN_COMMANDS:
-        raise stdx.ySecScanException(f"Forbidden command: {cmd[0]}")
+    if cmd[0] in list(set(additional_forbbiden_commands) | set(FORBIDDEN_COMMANDS)):
+        raise stdx.PySecScanBaseException(f"Forbidden command: {cmd[0]}")
 
     for item in cmd:
         if any(operator in item for operator in FORBIDDEN_OPERATORS):
@@ -134,7 +135,8 @@ def sanitize_shell_command(
 def run_subprocess(
     command: str,
     additional_control_raise_on_success: LambdaType = None,
-    interpolate_enabled: bool = True,
+    additional_forbbiden_commands: list = [],
+    enable_interpolate: bool = True,
     print_stdout: bool = True,
     print_stderror: bool = True,
     raise_on_failure: bool = False,
@@ -142,7 +144,8 @@ def run_subprocess(
     command_sanitized = sanitize_shell_command(
         command,
         additional_control_raise_on_success,
-        interpolate_enabled=interpolate_enabled,
+        additional_forbbiden_commands,
+        enable_interpolate,
     )
 
     response = subprocess.run(

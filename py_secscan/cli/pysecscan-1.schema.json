@@ -22,6 +22,10 @@
           },
           "default": {}
         },
+        "pysecscan_dirpath": {
+          "type": "string",
+          "pattern": "^[/]?([^/]+/)*[^/]+$"
+        },
         "venv_dirpath": {
           "type": "string",
           "pattern": "^[/]?([^/]+/)*[^/]+$"
@@ -33,17 +37,21 @@
               "type": "boolean",
               "default": true
             },
-            "additional_allowed_packages": {
+            "disable_venv_check": {
+              "type": "boolean",
+              "default": false
+            },
+            "disable_venv_creation": {
+              "type": "boolean",
+              "default": false
+            },
+            "additional_forbbiden_commands": {
               "type": "array",
               "items": {
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9-_.]+$"
               },
               "default": []
-            },
-            "exclude_default_allowed_packages": {
-              "type": "boolean",
-              "default": false
             }
           },
           "additionalProperties": false

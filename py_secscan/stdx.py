@@ -1,16 +1,23 @@
 import os
 
-from py_secscan.settings import LOGGER
+from py_secscan.settings import LOGGER, setenv, set_debug_mode
 from typing import List
+from argparse import Action
 
 try:
-    from distutils.version import LooseVersion
+    from distutils.version import LooseVersion as parse
 except ModuleNotFoundError:
-    from packaging.version import parse as LooseVersion
+    from packaging.version import parse
 
 
 class PySecScanBaseException(Exception):
     pass
+
+
+class PySecScanVirtualVenvNotLoadedException(Exception):
+    def __init__(self, venv_dirpath: str, *args, **kwargs):
+        self.message = f"Virtualenv not loaded: run 'source {venv_dirpath}/bin/activate' to activate it"
+        super().__init__(self.message, *args, **kwargs)
 
 
 class ParserPackageExecutionException(PySecScanBaseException):
@@ -32,6 +39,20 @@ class ParserPackageExecutionException(PySecScanBaseException):
         super().__init__(self.message, *args, **kwargs)
 
 
+class StoreVerbosityParser(Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if option_string == "-vv":
+            values = "2"
+        elif option_string == "-vvv":
+            set_debug_mode()
+            values = "3"
+        else:
+            values = "1"
+
+        setenv("PY_SECSCAN_VERBOSITY", values, overwrite=True)
+        setattr(namespace, self.dest, values)
+
+
 def verbose(level: str):
     import functools
 
@@ -43,8 +64,7 @@ def verbose(level: str):
         def wrapper(*args, **kwargs):
             return (
                 func(*args, **kwargs)
-                if LooseVersion(str(level))
-                <= LooseVersion(os.environ["PY_SECSCAN_VERBOSITY"])
+                if parse(str(level)) <= parse(os.environ["PY_SECSCAN_VERBOSITY"])
                 else neutered
             )
 

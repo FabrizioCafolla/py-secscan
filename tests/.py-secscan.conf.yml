@@ -8,7 +8,8 @@ options:
     B: "2"
   security:
     enabled: true
-    additional_allowed_packages: ["cyclonedx-py"]
+    disable_venv_check: true
+    # additional_forbbiden_commands: ["echo"]
 
 packages:
   - command_name: "echo"
