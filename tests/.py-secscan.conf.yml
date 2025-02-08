@@ -1,20 +1,22 @@
+version: "1"
+
 options:
-  venv_dirpath: ".venv"
+  debug: false
+  venv_dirpath: "tests/.venv"
   env:
-    A: "1"
+    # A: "$(echo 'C')"
     B: "2"
   security:
     enabled: true
-    additional_allowed_packages: ["checkov"]
+    # disable_venv_check: true
+    # additional_forbbiden_commands: ["echo"]
 
 packages:
-  - package_name: "ruff"
-    args: ["check", "--fix"]
+  - command_name: "echo"
+    command_args: ["ciao", "${A}", "${B}"]
     on_error_continue: false
-  - package_name: "bandit"
-    args: ["-r", "."]
-    extras: ["toml"]
+  - install:
+      extras: ["toml"]
+    command_name: "bandit"
+    command_args: ["-r", "."]
     enabled: false
-  - package_name: "checkov"
-    enabled: false
-    args: ["--directory", "."]

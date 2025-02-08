@@ -2,12 +2,15 @@ import logging
 import os
 from datetime import datetime
 
+
 CURRENT_DIRPATH = os.getcwd()
 PY_SECSCAN_DIRNAME = ".py-secscan"
+VEVN_DIRNAME = ".venv"
 
 DEFAULT_ENV = {
     "PY_SECSCAN_CONFIG_FILENAME": ".py-secscan.conf.yml",
     "PY_SECSCAN_PATH": os.path.join(f"{CURRENT_DIRPATH}/{PY_SECSCAN_DIRNAME}"),
+    "PY_SECSCAN_VENV": os.path.join(f"{CURRENT_DIRPATH}/{VEVN_DIRNAME}"),
     "PY_SECSCAN_LOGGING_PATH": os.path.join(
         f"{CURRENT_DIRPATH}/{PY_SECSCAN_DIRNAME}/logs"
     ),
@@ -16,6 +19,7 @@ DEFAULT_ENV = {
     "PY_SECSCAN_DATA": str(datetime.now().strftime("%Y-%m-%d")),
     "PY_SECSCAN_DATATIME_START": str(datetime.now().strftime("%Y-%m-%d %H:%m:%s")),
     "PY_SECSCAN_DEBUG": "0",
+    "PY_SECSCAN_VERBOSITY": "1",
 }
 
 LOGGER = logging.getLogger(DEFAULT_ENV["PY_SECSCAN__LOGGING_NAME"])
@@ -53,13 +57,21 @@ def setenv_from_dict(overwrite: bool = False, **kargs) -> None:
 
 def load_env() -> None:
     setenv_from_dict(overwrite=False, **DEFAULT_ENV)
+    setenv("PY_SECSCAN_LOGGING_FILEPATH", LOGGER_FILEPATH, overwrite=True)
+
     try:
-        os.makedirs(DEFAULT_ENV["PY_SECSCAN_LOGGING_PATH"], exist_ok=True)
+        os.makedirs(os.environ["PY_SECSCAN_LOGGING_PATH"], exist_ok=True)
         logging.basicConfig(
             level=logging.DEBUG,
-            format=DEFAULT_ENV["PY_SECSCAN_LOGGING_FORMAT"],
-            filename=LOGGER_FILEPATH,
+            format=os.environ["PY_SECSCAN_LOGGING_FORMAT"],
+            filename=os.environ["PY_SECSCAN_LOGGING_FILEPATH"],
         )
     except Exception as e:
         print(str(e))
         exit(1)
+
+
+def set_debug_mode() -> None:
+    setenv("PY_SECSCAN_DEBUG", "1", overwrite=True)
+    setenv("PY_SECSCAN_VERBOSITY", "3", overwrite=True)
+    LOGGER.debug("Debug mode enabled")

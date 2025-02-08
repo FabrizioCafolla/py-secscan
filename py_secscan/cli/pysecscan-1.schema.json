@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PySecScan Configuration Schema",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1"
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "debug": {
+          "type": "boolean",
+          "default": false
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "pysecscan_dirpath": {
+          "type": "string",
+          "pattern": "^[/]?([^/]+/)*[^/]+$"
+        },
+        "venv_dirpath": {
+          "type": "string",
+          "pattern": "^[/]?([^/]+/)*[^/]+$"
+        },
+        "security": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "disable_builtins": {
+              "type": "boolean",
+              "default": false
+            },
+            "disable_venv_check": {
+              "type": "boolean",
+              "default": false
+            },
+            "disable_venv_creation": {
+              "type": "boolean",
+              "default": false
+            },
+            "disable_venv_install": {
+              "type": "boolean",
+              "default": false
+            },
+            "additional_forbbiden_commands": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9-_.]+$"
+              },
+              "default": []
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/package"
+      },
+      "default": []
+    }
+  },
+  "definitions": {
+    "package": {
+      "type": "object",
+      "required": ["command_name"],
+      "properties": {
+        "install": {
+          "type": "object",
+          "properties": {
+            "package_name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-_.]+$"
+            },
+            "version": {
+              "type": "string"
+            },
+            "extras": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          }
+        },
+        "command_name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9-_.]+$"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "command_args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "on_error_continue": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
