@@ -37,11 +37,19 @@
               "type": "boolean",
               "default": true
             },
+            "disable_builtins": {
+              "type": "boolean",
+              "default": false
+            },
             "disable_venv_check": {
               "type": "boolean",
               "default": false
             },
             "disable_venv_creation": {
+              "type": "boolean",
+              "default": false
+            },
+            "disable_venv_install": {
               "type": "boolean",
               "default": false
             },

@@ -109,25 +109,42 @@ def sanitize_shell_command(
     additional_forbbiden_commands: list = [],
     enable_interpolate: bool = True,
 ) -> str:
+    cmd_splitted = shlex.split(command)
     cmd = (
-        [interpolate(item) for item in shlex.split(command)]
+        [interpolate(item) for item in cmd_splitted]
         if enable_interpolate
-        else shlex.split(command)
+        else cmd_splitted
     )
+    del cmd_splitted
 
     if cmd[0] in list(set(additional_forbbiden_commands) | set(FORBIDDEN_COMMANDS)):
-        raise stdx.PySecScanBaseException(f"Forbidden command: {cmd[0]}")
+        raise stdx.PySecScanSanitizeCommandException(f"Forbidden command: {cmd[0]}")
+
+    if cmd[0].startswith("$"):
+        raise stdx.PySecScanSanitizeCommandException(
+            f"Forbidden command: {cmd[0]} starting with '$'"
+        )
+
+    if cmd[0].startswith(" "):
+        raise stdx.PySecScanSanitizeCommandException(
+            f"Forbidden command: {cmd[0]} starting with ' '"
+        )
+
+    if "=" in cmd[0]:
+        raise stdx.PySecScanSanitizeCommandException(
+            f"Forbidden command: {cmd[0]} containing '='"
+        )
 
     for item in cmd:
         if any(operator in item for operator in FORBIDDEN_OPERATORS):
-            raise stdx.PySecScanBaseException(
+            raise stdx.PySecScanSanitizeCommandException(
                 f"Forbidden operator '{item}' in command: {command}"
             )
 
     if isinstance(
         additional_control_raise_on_success, LambdaType
     ) and additional_control_raise_on_success(cmd):
-        raise stdx.PySecScanBaseException(f"Command not allowed: {command}")
+        raise stdx.PySecScanSanitizeCommandException(f"Command not allowed: {command}")
 
     return cmd
 
@@ -139,14 +156,21 @@ def run_subprocess(
     enable_interpolate: bool = True,
     print_stdout: bool = True,
     print_stderror: bool = True,
+    sanitize_command: bool = True,
     raise_on_failure: bool = False,
 ) -> subprocess.CompletedProcess:
-    command_sanitized = sanitize_shell_command(
-        command,
-        additional_control_raise_on_success,
-        additional_forbbiden_commands,
-        enable_interpolate,
+    command_sanitized = (
+        sanitize_shell_command(
+            command,
+            additional_control_raise_on_success,
+            additional_forbbiden_commands,
+            enable_interpolate,
+        )
+        if sanitize_command
+        else command
     )
+
+    stdx.info(f"Run command: {' '.join(command_sanitized)}")
 
     response = subprocess.run(
         command_sanitized, capture_output=True, text=True, check=False

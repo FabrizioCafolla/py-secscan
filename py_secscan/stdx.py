@@ -1,6 +1,6 @@
 import os
 
-from py_secscan.settings import LOGGER, setenv, set_debug_mode
+from py_secscan.settings import DEFAULT_ENV, LOGGER, setenv, set_debug_mode
 from typing import List
 from argparse import Action
 
@@ -11,6 +11,10 @@ except ModuleNotFoundError:
 
 
 class PySecScanBaseException(Exception):
+    pass
+
+
+class PySecScanSanitizeCommandException(Exception):
     pass
 
 
@@ -64,7 +68,12 @@ def verbose(level: str):
         def wrapper(*args, **kwargs):
             return (
                 func(*args, **kwargs)
-                if parse(str(level)) <= parse(os.environ["PY_SECSCAN_VERBOSITY"])
+                if parse(str(level))
+                <= parse(
+                    os.getenv(
+                        "PY_SECSCAN_VERBOSITY", DEFAULT_ENV["PY_SECSCAN_VERBOSITY"]
+                    )
+                )
                 else neutered
             )
 

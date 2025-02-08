@@ -96,8 +96,8 @@ def main() -> bool:
         parser = RuntimeParserBuilder(args.config_filename)
         py_secscan = parser.instance
         py_secscan.execute()
-    except KeyboardInterrupt as e:
-        stdx.exception(e)
+    except KeyboardInterrupt:
+        stdx.error("Manual interruption")
     except Exception as e:
         stdx.exception(e)
 

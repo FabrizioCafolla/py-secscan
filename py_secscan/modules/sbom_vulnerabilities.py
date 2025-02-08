@@ -1,9 +1,9 @@
 import requests
 
 import os
-from sys import executable
-from py_secscan import utils
+from py_secscan import stdx
 import json
+import argparse
 
 # Schema: https://google.github.io/osv.dev/post-v1-query/
 OSV_API_V1_URL = "https://api.osv.dev/v1/query"
@@ -12,13 +12,13 @@ OSV_API_V1_URL = "https://api.osv.dev/v1/query"
 def osv_get_package_cve(package_name, version=None):
     data = {"version": version, "package": {"name": package_name, "ecosystem": "PyPI"}}
     cves = []
-    utils.debug(f"[OSV] Scanning package: {package_name}=={version}")
+    stdx.info(f"[OSV] Scanning package: {package_name}=={version}")
 
     try:
         response = requests.post(OSV_API_V1_URL, json=data)
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        utils.exception(
+        stdx.exception(
             e, f"Failed to get vulnerabilities for package: {package_name}=={version}"
         )
 
@@ -52,19 +52,35 @@ def osv_get_package_cve(package_name, version=None):
     return cves
 
 
-def create_sbom():
-    utils.run_subprocess(
-        f"{executable} -m cyclonedx_py environment --outfile {os.environ['PY_SECSCAN_PATH']}/sbom.json {os.environ['PY_SECSCAN_VENV']}"
-    )
+def main():
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("sbom_filepath", type=str, help="SBOM file path")
+        parser.add_argument(
+            "vulnerabilities_output_filename",
+            type=str,
+            help="Vulnerabilities output file path",
+        )
 
-    with open(f"{os.environ['PY_SECSCAN_PATH']}/sbom.json") as f:
-        sbom = json.loads(f.read())
+        args = parser.parse_args()
 
-    packages_cve = {}
-    for component in sbom["components"]:
-        name = component["name"]
-        version = component["version"]
-        packages_cve[name] = osv_get_package_cve(name, version)
+        if not os.path.isfile(args.sbom_filepath):
+            stdx.exception(FileNotFoundError(f"File not found: {args.sbom_filepath}"))
 
-    with open(f"{os.environ['PY_SECSCAN_PATH']}/vulnerabilities.json", "w") as f:
-        f.write(json.dumps(packages_cve, indent=2))
+        with open(args.sbom_filepath) as f:
+            sbom = json.loads(f.read())
+
+        packages_cve = {}
+        for component in sbom["components"]:
+            name = component["name"]
+            version = component["version"]
+            packages_cve[name] = osv_get_package_cve(name, version)
+
+        with open(args.vulnerabilities_output_filename, "w") as f:
+            f.write(json.dumps(packages_cve, indent=2))
+    except KeyboardInterrupt:
+        stdx.error("Manual interruption")
+
+
+if __name__ == "__main__":
+    main()

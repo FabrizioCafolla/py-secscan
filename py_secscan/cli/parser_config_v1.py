@@ -3,7 +3,6 @@ import sys
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-
 from py_secscan import settings
 from py_secscan import process
 from py_secscan import stdx
@@ -19,8 +18,10 @@ class OptionsConfigV1(ParserDataclassBase):
     @dataclass
     class SecurityConfigV1:
         enabled: Optional[bool] = True
+        disable_builtins: Optional[bool] = False
         disable_venv_check: Optional[bool] = False
         disable_venv_creation: Optional[bool] = False
+        disable_venv_install: Optional[bool] = False
         additional_forbbiden_commands: Optional[List[str]] = field(default_factory=list)
 
     debug: Optional[bool] = False
@@ -37,30 +38,31 @@ class OptionsConfigV1(ParserDataclassBase):
 
 
 @dataclass
-class PackageConfigV1(ParserDataclassBase):
+class PackageBaseConfigV1(ParserDataclassBase):
+    command_name: str
+    command_args: Optional[List[str]] = field(default_factory=list)
+    enabled: Optional[bool] = True
+    on_error_continue: Optional[bool] = True
+
+    def get_command(self, additional_forbbiden_commands) -> str:
+        return process.sanitize_shell_command(
+            command=" ".join([self.command_name] + self.command_args),
+            additional_forbbiden_commands=additional_forbbiden_commands,
+        )
+
+    def __post_init__(self):
+        super().__post_init__()
+
+
+@dataclass
+class PackageConfigV1(PackageBaseConfigV1):
     @dataclass
     class InstallConfigV1:
         package_name: str = None
         version: Optional[str] = None
         extras: Optional[List[str]] = field(default_factory=list)
 
-    command_name: Optional[str]
-    on_error_continue: Optional[bool] = True
-    enabled: Optional[bool] = True
     install: Optional[InstallConfigV1] = None
-    command_args: Optional[List[str]] = field(default_factory=list)
-
-    @property
-    def package_type(self) -> str:
-        return self.type
-
-    @property
-    def name(self) -> str:
-        return self.command_name
-
-    @property
-    def args(self) -> List[str]:
-        return self.command_args
 
     def __post_init__(self):
         super().__post_init__()
@@ -72,9 +74,9 @@ class PackageConfigV1(ParserDataclassBase):
             if not self.install.package_name:
                 self.install.package_name = self.command_name
 
-    def validate_type(self, value, **_):
-        if value not in ["python", "bin"]:
-            raise ValueError(f"Invalid type: {value}")
+
+class PackageBuiltinConfigV1(PackageBaseConfigV1):
+    pass
 
 
 @dataclass
@@ -83,6 +85,7 @@ class PySecScanConfigV1(PySecScanConfigBase):
     jsonschema: str = "pysecscan-1.schema.json"
     options: Optional[OptionsConfigV1] = None
     packages: Optional[List[PackageConfigV1]] = field(default_factory=list)
+    builtins: Optional[List[PackageBuiltinConfigV1]] = field(default_factory=list)
 
     def __post_init__(self):
         super().__post_init__()
@@ -95,11 +98,35 @@ class PySecScanConfigV1(PySecScanConfigBase):
             if not isinstance(package, PackageConfigV1):
                 package = PackageConfigV1(**package)
                 packages.append(package)
-
         self.packages = packages
 
+        builtins = []
+        if not self.builtins and self.options.security.disable_builtins is False:
+            self.builtins = [
+                {"command_name": "ruff", "command_args": ["check"], "enabled": True},
+                {
+                    "command_name": "cyclonedx-py",
+                    "command_args": [
+                        f"environment --outfile sbom.json {self.options.venv_dirpath}"
+                    ],
+                    "enabled": True,
+                },
+                {
+                    "command_name": "python",
+                    "command_args": [
+                        "-m py_secscan.modules.sbom_vulnerabilities sbom.json sbom_vulnerabilities.json"
+                    ],
+                    "enabled": True,
+                },
+            ]
+        for builtin in self.builtins:
+            if not isinstance(builtin, PackageBuiltinConfigV1):
+                builtin = PackageBuiltinConfigV1(**builtin)
+                builtins.append(builtin)
+        self.builtins = builtins
+
     def setup(self) -> None:
-        def _setup_venv_dirpath() -> str:
+        def _setup_venv() -> str:
             # Ensure the environment variable is set to the correct value
             settings.setenv("PY_SECSCAN_PATH", self.options.pysecscan_dirpath)
             settings.setenv("PY_SECSCAN_VENV", self.options.venv_dirpath)
@@ -136,7 +163,10 @@ class PySecScanConfigV1(PySecScanConfigBase):
 
             with open(f"{self.options.pysecscan_dirpath}/requirements.txt", "w") as f:
                 for package in self.packages:
-                    if not package.install:
+                    if (
+                        not package.install
+                        or self.options.security.disable_venv_install
+                    ):
                         continue
 
                     line = (
@@ -144,9 +174,11 @@ class PySecScanConfigV1(PySecScanConfigBase):
                         if package.install.version
                         else package.install.package_name
                     )
+                    stdx.debug(f"Installing package: {line}")
                     f.write(f"{line}\n")
 
                     for extra in package.install.extras:
+                        stdx.debug(f"  Extra: {extra}")
                         f.write(f"{package.install.package_name}[{extra}]\n")
 
             process.run_subprocess(
@@ -185,42 +217,45 @@ class PySecScanConfigV1(PySecScanConfigBase):
 
         _load_env()
         _setup_gitignore()
-        _setup_venv_dirpath()
+        _setup_venv()
 
-    def execute_packages(self) -> None:
+    def execute_packages(self, packages: list) -> None:
         try:
-            for package in self.packages:
+            for package in packages:
+                command = package.get_command(
+                    additional_forbbiden_commands=self.options.security.additional_forbbiden_commands
+                )
                 status.ExecutionStatusInstance.update(
-                    package.name, status.ExecutionStatusAllowed.RUNNING
+                    command[0], status.ExecutionStatusAllowed.RUNNING
                 )
 
                 if not package.enabled:
-                    stdx.warning(f"{package.name} package is disabled")
+                    stdx.warning(f"{command[0]} package is disabled")
                     status.ExecutionStatusInstance.update(
-                        package.name, status.ExecutionStatusAllowed.DISABLED
+                        command[0], status.ExecutionStatusAllowed.DISABLED
                     )
                     continue
 
-                stdx.info(f"Running {package.name}")
-
                 response = process.run_subprocess(
-                    command=" ".join([package.name] + package.args),
-                    additional_forbbiden_commands=self.options.security.additional_forbbiden_commands,
+                    command=package.get_command(
+                        additional_forbbiden_commands=self.options.security.additional_forbbiden_commands
+                    ),
+                    sanitize_command=False,  # Sanitization is done in the package command
                 )
 
                 if response.returncode == 0:
-                    stdx.info(f"Package {package.name} completed")
+                    stdx.info(f"Package {command[0]} completed")
                     status.ExecutionStatusInstance.update(
-                        package.name, status.ExecutionStatusAllowed.COMPLETED
+                        command[0], status.ExecutionStatusAllowed.COMPLETED
                     )
                     continue
 
                 status.ExecutionStatusInstance.update(
-                    package.name, status.ExecutionStatusAllowed.FAILED
+                    command[0], status.ExecutionStatusAllowed.FAILED
                 )
                 if not package.on_error_continue:
                     raise stdx.ParserPackageExecutionException(
-                        package.name, package.args, response.args
+                        command[0], package.args, response.args
                     )
         except Exception as e:
             stdx.exception(e)
@@ -229,5 +264,11 @@ class PySecScanConfigV1(PySecScanConfigBase):
 
     def execute(self):
         self.setup()
-        self.execute_packages()
+
+        stdx.info("Execute builtins packages")
+        self.execute_packages(self.builtins)
+
+        stdx.info("Execute packages")
+        self.execute_packages(self.packages)
+
         return status.ExecutionStatusInstance
