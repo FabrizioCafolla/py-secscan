@@ -237,10 +237,8 @@ class PySecScanConfigV1(PySecScanConfigBase):
                     continue
 
                 response = process.run_subprocess(
-                    command=package.get_command(
-                        additional_forbbiden_commands=self.options.security.additional_forbbiden_commands
-                    ),
-                    sanitize_command=False,  # Sanitization is done in the package command
+                    command=command,
+                    sanitize_command=False,  # Command is already sanitized
                 )
 
                 if response.returncode == 0:
