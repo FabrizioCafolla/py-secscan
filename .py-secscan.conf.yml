@@ -1,0 +1,15 @@
+version: "1"
+
+packages:
+  - command_name: "bandit"
+    command_args: ["-r", "py_secscan"]
+    install:
+      enabled: true
+      extras: ["toml"]
+  - command_name: "pip-audit"
+    install:
+      enabled: true
+
+builtins:
+  sbom_vulnerabilities:
+    enabled: true

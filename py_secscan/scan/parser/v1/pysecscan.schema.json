@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PySecScan Configuration Schema",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1"
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "debug": {
+          "type": "boolean",
+          "default": false
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "pysecscan_dirpath": {
+          "type": "string",
+          "pattern": "^[/]?([^/]+/)*[^/]+$"
+        },
+        "venv_dirpath": {
+          "type": "string",
+          "pattern": "^[/]?([^/]+/)*[^/]+$"
+        },
+        "security": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "disable_builtins": {
+              "type": "boolean",
+              "default": false
+            },
+            "disable_venv_check": {
+              "type": "boolean",
+              "default": false
+            },
+            "disable_venv_creation": {
+              "type": "boolean",
+              "default": false
+            },
+            "disable_venv_install": {
+              "type": "boolean",
+              "default": false
+            },
+            "additional_forbbiden_commands": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9-_.]+$"
+              },
+              "default": []
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/package"
+      },
+      "default": []
+    },
+    "builtins": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9-_.]+$": {
+          "$ref": "#/definitions/builtins"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "command_name": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9-_.]+$"
+    },
+    "command_args": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "on_error_continue": {
+      "type": "boolean",
+      "default": true
+    },
+    "package": {
+      "type": "object",
+      "required": ["command_name"],
+      "properties": {
+        "install": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "$ref": "#/definitions/enabled"
+            },
+            "package_name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-_.]+$"
+            },
+            "version": {
+              "type": "string"
+            },
+            "extras": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "additionalProperties": false
+        },
+        "command_name": {
+          "$ref": "#/definitions/command_name"
+        },
+        "command_args": {
+          "$ref": "#/definitions/command_args"
+        },
+        "enabled": {
+          "$ref": "#/definitions/enabled"
+        },
+        "on_error_continue": {
+          "$ref": "#/definitions/on_error_continue"
+        }
+      },
+      "additionalProperties": false
+    },
+    "builtins": {
+      "type": "object",
+      "items": {
+        "type": "object",
+        "properties": {
+          "command_args": {
+            "$ref": "#/definitions/command_args"
+          },
+          "enabled": {
+            "$ref": "#/definitions/enabled"
+          },
+          "on_error_continue": {
+            "$ref": "#/definitions/on_error_continue"
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": {}
+    }
+  },
+  "additionalProperties": false
+}

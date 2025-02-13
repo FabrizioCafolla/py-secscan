@@ -1,0 +1,26 @@
+version: "1"
+
+options:
+  debug: false
+  venv_dirpath: "tests/.venv"
+  env:
+    # A: "$(echo 'C')"
+    B: "2"
+  security:
+    enabled: true
+    # disable_venv_check: true
+    # additional_forbbiden_commands: ["echo"]
+
+packages:
+  - command_name: "echo"
+    command_args: ["ciao", "${A}", "${B}"]
+    on_error_continue: false
+  - install:
+      extras: ["toml"]
+    command_name: "bandit"
+    command_args: ["-r", "."]
+    enabled: false
+
+builtins:
+  ruff:
+    enabled: false
