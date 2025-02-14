@@ -51,10 +51,14 @@ jobs:
         if: ${{ steps.release.outputs.pr }}
         run: |
           old_version=$(uvx --from=toml-cli toml get --toml-path=pyproject.toml project.version)
+          echo "Actual version: ${old_version}"
+
           new_version=$(cat version.txt)
+          echo "New version: ${new_version}"
 
           if [ "${old_version}" != "${new_version}" ]; then
             uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version ${new_version}
+            echo "Bump version from ${old_version} to ${new_version}"
 
             git config --global user.email "${{ secrets.ACTION_EMAIL }}"
             git config --global user.name "FabrizioCafolla"
@@ -62,6 +66,8 @@ jobs:
             git add pyproject.toml
             git commit -m "fix(bump-version): Update version to ${new_version}"
             git push
+          else
+            echo "No version bump needed"
           fi
 
       - name: Publish release
