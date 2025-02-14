@@ -50,7 +50,6 @@ jobs:
       - name: Bump release
         if: ${{ steps.release.outputs.pr }}
         run: |
-          echo "${{ steps.release.outputs.pr.baseBranchName }}"
           git checkout release-please--branches--main
           git pull
 

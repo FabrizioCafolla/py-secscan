@@ -61,6 +61,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 include-package-data = true
+license-files = []
 
 [tool.setuptools.package-data]
 "py_secscan" = ["scan/parser/v1/pysecscan.schema.json"]
