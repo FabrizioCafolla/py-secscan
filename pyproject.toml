@@ -1,9 +1,26 @@
 [project]
 name = "py-secscan"
 version = "0.1.0"
+authors = [{ name = "FabrizioCafolla" }]
 description = "PySecScan is the tool that allows you to perform security scans in your Python project through a simple YAML configuration."
+keywords = [
+  "py-secscan", "sast", "requirements", "packaging"
+]
+classifiers = [
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Software Development :: Quality Assurance",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Software Development :: Libraries",
+]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "cyclonedx-bom>=5.1.2",
     "jsonschema>=4.23.0",
@@ -37,7 +54,6 @@ environments = [
     "sys_platform == 'darwin'",
     "sys_platform == 'linux'",
 ]
-
 
 [build-system]
 requires = ["setuptools", "wheel"]
