@@ -1,0 +1,29 @@
+labelPRBasedOnFilePath:
+  ci:
+    - .github/*
+    - .github/**/*
+    - scripts/*
+    - scripts/**/*
+
+  dependencies:
+    - uv.lock
+    - pyproject.toml
+
+  app:
+    - py_secscan/*
+    - py_secscan/**/*
+
+  test:
+    - tests/*
+    - tests/**/*
+
+firstPRWelcomeComment: >
+  Thanks for opening this pull request! Please check out our contributing guidelines.
+
+verifyTitles:
+  titleRegexp: ^(feat|feat!|fix|fix!|docs|refactor|refactor!|test|chore|build)\((ci|main|docs|deps|deps-dev|app|version)\):.*
+  alwaysUsePrTitle: true
+  validateEitherPrOrSingleCommitTitle: true
+  statusTitle: "Title Validator"
+  successMessage: "Validation successful!"
+  failureMessage: "Wrong ${type} title: ${title}"

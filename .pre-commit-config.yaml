@@ -1,0 +1,17 @@
+default_language_version:
+  python: python3
+
+default_stages: [pre-commit, pre-commit, pre-push, post-checkout]
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.23.3
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.5.29
+    hooks:
+      - id: uv-lock
+      - id: uv-sync
+        args: ["--locked", "--all-packages"]
