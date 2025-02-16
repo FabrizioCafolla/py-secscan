@@ -46,7 +46,7 @@ jobs:
           echo "  - UV version: ${{ steps.setup-uv.outputs.uv-version }}"
           echo "  - Python version: ${{ steps.setup-python.outputs.python-version}}"
 
-          uv sync
+          uv sync --all-extras
 
           uv run pre-commit run --all-files
           uv run pytest tests/parser.py
