@@ -6,7 +6,7 @@ from py_secscan.scan import scan
 from py_secscan.view import view
 
 
-def parse_args() -> argparse.Namespace:
+def argparser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="""PySecScan is a lightweight and easy-to-use security scanning tool for Python projects. \\
         With a simple YAML configuration, it seamlessly integrates into any workflow, regardless of the framework or dependencies used."""
@@ -34,14 +34,7 @@ def parse_args() -> argparse.Namespace:
         help="Start the web application to view the sbom file and vulnerabilities",
     )
 
-    view_parser.add_argument("-s", "--sbom-filepath", type=str, default="sbom.json", help="SBOM file path")
-    view_parser.add_argument(
-        "-v",
-        "--vulnerabilities-filepath",
-        type=str,
-        default="sbom_vulnerabilities.json",
-        help="SBOM Vulnerabilities file path",
-    )
+    view.argparser(view_parser)
 
     scan_parser = subparsers.add_parser("scan", help="Execute the security scan using the configuration")
     scan_parser.add_argument(
@@ -52,14 +45,14 @@ def parse_args() -> argparse.Namespace:
         default=os.environ["PY_SECSCAN_CONFIG_FILENAME"],
     )
 
-    return parser.parse_args()
+    return parser
 
 
 def main() -> bool:
     try:
         settings.load_env()
 
-        args = parse_args()
+        args = argparser().parse_args()
 
         if args.command == "view":
             view.start(args.sbom_filepath, args.vulnerabilities_filepath)

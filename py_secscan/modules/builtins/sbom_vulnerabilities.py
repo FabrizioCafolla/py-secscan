@@ -11,6 +11,12 @@ from py_secscan import stdx
 OSV_API_V1_URL = "https://api.osv.dev/v1/query"
 
 
+class PySecScanVulnerabilitiesFoundError(stdx.PySecScanBaseError):
+    def __init__(self, vulnerabilities: list[str], *args, **kwargs):
+        self.message = f"Vulnerabilities found: {len(vulnerabilities)} {'\n  - '.join(vulnerabilities)}"
+        super().__init__(self.message, *args, **kwargs)
+
+
 def osv_get_package_cve(package_name, version=None):
     data = {"version": version, "package": {"name": package_name, "ecosystem": "PyPI"}}
     cves = []
@@ -67,6 +73,8 @@ def main():
         if not os.path.isfile(args.sbom_filepath):
             stdx.exception(FileNotFoundError(f"File not found: {args.sbom_filepath}"))
 
+        vulnerabilities = []
+
         with open(args.sbom_filepath) as f:
             sbom = json.loads(f.read())
 
@@ -79,6 +87,16 @@ def main():
         with open(args.vulnerabilities_output_filename, "w") as f:
             f.write(json.dumps(packages_cve, indent=2))
             f.write("\n")
+
+        for package, cves in packages_cve.items():
+            for cve in cves:
+                stdx.error(f"[{package}] CVE: {cve['id']}")
+                vulnerabilities.append(cve)
+
+        if vulnerabilities:
+            stdx.exception(PySecScanVulnerabilitiesFoundError(vulnerabilities))
+
+        stdx.info("No vulnerabilities found")
     except KeyboardInterrupt:
         stdx.error("Manual interruption")
 
