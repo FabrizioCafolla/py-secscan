@@ -194,7 +194,8 @@ def run_subprocess(
     try:
         response = subprocess.run(command_sanitized, capture_output=True, text=True, check=True, shell=False)  # nosec
 
-        stdx.info(response.stdout)
+        if response.stdout != "":
+            stdx.info(response.stdout)
 
         return response
     except subprocess.CalledProcessError as e:

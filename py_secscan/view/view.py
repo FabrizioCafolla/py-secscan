@@ -147,8 +147,10 @@ def sbom_vulnerabilities(vulnerabilities_filepath: str = None):  # noqa: C901
     )
 
 
-def main():
-    parser = argparse.ArgumentParser()
+def argparser(parser: argparse.ArgumentParser = None) -> argparse.Namespace:
+    if not parser:
+        parser = argparse.ArgumentParser()
+
     parser.add_argument("-s", "--sbom-filepath", type=str, default="sbom.json", help="SBOM file path")
     parser.add_argument(
         "-v",
@@ -157,7 +159,15 @@ def main():
         default="sbom_vulnerabilities.json",
         help="SBOM Vulnerabilities file path",
     )
-    args = parser.parse_args()
+    return parser
+
+
+def main():
+    args = argparser().parse_args()
+
+    if not os.path.isfile(args.sbom_filepath) or not os.path.isfile(args.vulnerabilities_filepath):
+        stdx.error("SBOM or Vulnerabilities file not found.")
+        return 1
 
     st.set_page_config(page_title="SBOM Vulnerabilities Viewer", layout="wide")
     st.title("🚀 PySecScan - Vulnerabilities Viewer")
@@ -174,7 +184,8 @@ def start(sbom_filepath: str, vulnerabilities_filepath: str):
     try:
         process.run_subprocess(
             f"streamlit run \
-                {os.path.join(os.path.dirname(__file__), 'webapp.py')} \
+                {__file__} \
+                -- \
                 -s {sbom_filepath} \
                 -v {vulnerabilities_filepath}",
         )

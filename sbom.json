@@ -724,7 +724,7 @@
       "version": "5.1.2"
     },
     {
-      "bom-ref": "cyclonedx-python-lib==8.7.0",
+      "bom-ref": "cyclonedx-python-lib==8.8.0",
       "description": "Python library for CycloneDX",
       "externalReferences": [
         {
@@ -772,9 +772,9 @@
           "value": "validation"
         }
       ],
-      "purl": "pkg:pypi/cyclonedx-python-lib@8.7.0",
+      "purl": "pkg:pypi/cyclonedx-python-lib@8.8.0",
       "type": "library",
-      "version": "8.7.0"
+      "version": "8.8.0"
     },
     {
       "bom-ref": "defusedxml==0.7.1",
@@ -1434,7 +1434,7 @@
       "version": "1.9.1"
     },
     {
-      "bom-ref": "numpy==2.2.2",
+      "bom-ref": "numpy==2.2.3",
       "description": "Fundamental package for array computing in Python",
       "externalReferences": [
         {
@@ -1485,9 +1485,9 @@
         }
       ],
       "name": "numpy",
-      "purl": "pkg:pypi/numpy@2.2.2",
+      "purl": "pkg:pypi/numpy@2.2.3",
       "type": "library",
-      "version": "2.2.2"
+      "version": "2.2.3"
     },
     {
       "bom-ref": "packageurl-python==0.16.0",
@@ -1908,7 +1908,7 @@
       "version": "5.29.3"
     },
     {
-      "bom-ref": "py-secscan==0.0.1",
+      "bom-ref": "py-secscan==0.1.0",
       "description": "PySecScan is the tool that allows you to perform security scans in your Python project through a simple YAML configuration.",
       "externalReferences": [
         {
@@ -1917,9 +1917,16 @@
           "url": "file:///Users/fabrizio.cafolla/projects/fabrizio/py-secscan"
         }
       ],
+      "licenses": [
+        {
+          "license": {
+            "name": "License :: OSI Approved :: Apache Software License"
+          }
+        }
+      ],
       "name": "py-secscan",
       "type": "library",
-      "version": "0.0.1"
+      "version": "0.1.0"
     },
     {
       "bom-ref": "py-serializable==1.1.2",
@@ -3179,7 +3186,9 @@
       "ref": "GitPython==3.1.44"
     },
     {
-      "dependsOn": ["MarkupSafe==3.0.2"],
+      "dependsOn": [
+        "MarkupSafe==3.0.2"
+      ],
       "ref": "Jinja2==3.1.5"
     },
     {
@@ -3196,7 +3205,7 @@
         "Jinja2==3.1.5",
         "jsonschema==4.23.0",
         "narwhals==1.26.0",
-        "numpy==2.2.2",
+        "numpy==2.2.3",
         "packaging==24.2",
         "pandas==2.2.3",
         "pillow==11.1.0",
@@ -3218,7 +3227,9 @@
       "ref": "arrow==1.3.0"
     },
     {
-      "dependsOn": ["pytest==8.3.4"],
+      "dependsOn": [
+        "pytest==8.3.4"
+      ],
       "ref": "attrs==25.1.0"
     },
     {
@@ -3257,7 +3268,7 @@
     {
       "dependsOn": [
         "chardet==5.2.0",
-        "cyclonedx-python-lib==8.7.0",
+        "cyclonedx-python-lib==8.8.0",
         "packageurl-python==0.16.0",
         "packaging==24.2",
         "pip-requirements-parser==32.0.1"
@@ -3273,7 +3284,7 @@
         "py-serializable==1.1.2",
         "sortedcontainers==2.4.0"
       ],
-      "ref": "cyclonedx-python-lib==8.7.0"
+      "ref": "cyclonedx-python-lib==8.8.0"
     },
     {
       "ref": "defusedxml==0.7.1"
@@ -3293,28 +3304,37 @@
       "ref": "fqdn==1.5.1"
     },
     {
-      "dependsOn": ["smmap==5.0.2"],
+      "dependsOn": [
+        "smmap==5.0.2"
+      ],
       "ref": "gitdb==4.0.12"
     },
     {
       "ref": "identify==2.6.7"
     },
     {
-      "dependsOn": ["pytest==8.3.4", "ruff==0.9.6"],
+      "dependsOn": [
+        "pytest==8.3.4",
+        "ruff==0.9.6"
+      ],
       "ref": "idna==3.10"
     },
     {
       "ref": "iniconfig==2.0.0"
     },
     {
-      "dependsOn": ["arrow==1.3.0"],
+      "dependsOn": [
+        "arrow==1.3.0"
+      ],
       "ref": "isoduration==20.11.0"
     },
     {
       "ref": "jsonpointer==3.0.0"
     },
     {
-      "dependsOn": ["referencing==0.36.2"],
+      "dependsOn": [
+        "referencing==0.36.2"
+      ],
       "ref": "jsonschema-specifications==2024.10.1"
     },
     {
@@ -3335,7 +3355,10 @@
       "ref": "jsonschema==4.23.0"
     },
     {
-      "dependsOn": ["boolean.py==4.0", "pytest==8.3.4"],
+      "dependsOn": [
+        "boolean.py==4.0",
+        "pytest==8.3.4"
+      ],
       "ref": "license-expression==30.4.1"
     },
     {
@@ -3373,10 +3396,13 @@
       "ref": "nodeenv==1.9.1"
     },
     {
-      "ref": "numpy==2.2.2"
+      "ref": "numpy==2.2.3"
     },
     {
-      "dependsOn": ["pytest==8.3.4", "setuptools==75.8.0"],
+      "dependsOn": [
+        "pytest==8.3.4",
+        "setuptools==75.8.0"
+      ],
       "ref": "packageurl-python==0.16.0"
     },
     {
@@ -3386,7 +3412,7 @@
       "dependsOn": [
         "Jinja2==3.1.5",
         "lxml==5.3.1",
-        "numpy==2.2.2",
+        "numpy==2.2.3",
         "pyarrow==19.0.0",
         "pytest==8.3.4",
         "python-dateutil==2.9.0.post0",
@@ -3396,7 +3422,9 @@
       "ref": "pandas==2.2.3"
     },
     {
-      "dependsOn": ["setuptools==75.8.0"],
+      "dependsOn": [
+        "setuptools==75.8.0"
+      ],
       "ref": "pbr==6.1.1"
     },
     {
@@ -3409,11 +3437,17 @@
       "ref": "pillow==11.1.0"
     },
     {
-      "dependsOn": ["pip==24.2"],
+      "dependsOn": [
+        "pip==24.2"
+      ],
       "ref": "pip-api==0.0.34"
     },
     {
-      "dependsOn": ["packaging==24.2", "pyparsing==3.2.1", "pytest==8.3.4"],
+      "dependsOn": [
+        "packaging==24.2",
+        "pyparsing==3.2.1",
+        "pytest==8.3.4"
+      ],
       "ref": "pip-requirements-parser==32.0.1"
     },
     {
@@ -3422,7 +3456,7 @@
     {
       "dependsOn": [
         "CacheControl==0.14.2",
-        "cyclonedx-python-lib==8.7.0",
+        "cyclonedx-python-lib==8.8.0",
         "packaging==24.2",
         "pip-api==0.0.34",
         "pip-requirements-parser==32.0.1",
@@ -3436,11 +3470,16 @@
       "ref": "pip_audit==2.8.0"
     },
     {
-      "dependsOn": ["pytest==8.3.4"],
+      "dependsOn": [
+        "pytest==8.3.4"
+      ],
       "ref": "platformdirs==4.3.6"
     },
     {
-      "dependsOn": ["pre_commit==4.1.0", "pytest==8.3.4"],
+      "dependsOn": [
+        "pre_commit==4.1.0",
+        "pytest==8.3.4"
+      ],
       "ref": "pluggy==1.5.0"
     },
     {
@@ -3465,22 +3504,33 @@
         "ruff==0.9.6",
         "streamlit==1.42.0"
       ],
-      "ref": "py-secscan==0.0.1"
+      "ref": "py-secscan==0.1.0"
     },
     {
-      "dependsOn": ["defusedxml==0.7.1"],
+      "dependsOn": [
+        "defusedxml==0.7.1"
+      ],
       "ref": "py-serializable==1.1.2"
     },
     {
-      "dependsOn": ["pandas==2.2.3", "pytest==8.3.4", "pytz==2025.1"],
+      "dependsOn": [
+        "pandas==2.2.3",
+        "pytest==8.3.4",
+        "pytz==2025.1"
+      ],
       "ref": "pyarrow==19.0.0"
     },
     {
-      "dependsOn": ["Jinja2==3.1.5", "numpy==2.2.2"],
+      "dependsOn": [
+        "Jinja2==3.1.5",
+        "numpy==2.2.3"
+      ],
       "ref": "pydeck==0.9.1"
     },
     {
-      "dependsOn": ["Jinja2==3.1.5"],
+      "dependsOn": [
+        "Jinja2==3.1.5"
+      ],
       "ref": "pyparsing==3.2.1"
     },
     {
@@ -3496,7 +3546,9 @@
       "ref": "pytest==8.3.4"
     },
     {
-      "dependsOn": ["six==1.17.0"],
+      "dependsOn": [
+        "six==1.17.0"
+      ],
       "ref": "python-dateutil==2.9.0.post0"
     },
     {
@@ -3524,7 +3576,9 @@
       "ref": "requests==2.32.3"
     },
     {
-      "dependsOn": ["six==1.17.0"],
+      "dependsOn": [
+        "six==1.17.0"
+      ],
       "ref": "rfc3339-validator==0.1.4"
     },
     {
@@ -3569,7 +3623,9 @@
       "ref": "sortedcontainers==2.4.0"
     },
     {
-      "dependsOn": ["pbr==6.1.1"],
+      "dependsOn": [
+        "pbr==6.1.1"
+      ],
       "ref": "stevedore==5.4.0"
     },
     {
@@ -3579,7 +3635,7 @@
         "blinker==1.9.0",
         "cachetools==5.5.1",
         "click==8.1.8",
-        "numpy==2.2.2",
+        "numpy==2.2.3",
         "packaging==24.2",
         "pandas==2.2.3",
         "pillow==11.1.0",
@@ -3596,11 +3652,18 @@
       "ref": "streamlit==1.42.0"
     },
     {
-      "dependsOn": ["pytest==8.3.4", "tornado==6.4.2"],
+      "dependsOn": [
+        "pytest==8.3.4",
+        "tornado==6.4.2"
+      ],
       "ref": "tenacity==9.0.0"
     },
     {
-      "dependsOn": ["regex==2024.11.6", "tomlkit==0.13.2", "typer==0.15.1"],
+      "dependsOn": [
+        "regex==2024.11.6",
+        "tomlkit==0.13.2",
+        "typer==0.15.1"
+      ],
       "ref": "toml-cli==0.7.0"
     },
     {
@@ -3652,7 +3715,7 @@
     }
   ],
   "metadata": {
-    "timestamp": "2025-02-14T08:18:41.751274+00:00",
+    "timestamp": "2025-02-16T17:54:08.472503+00:00",
     "tools": {
       "components": [
         {
@@ -3749,12 +3812,12 @@
           ],
           "name": "cyclonedx-python-lib",
           "type": "library",
-          "version": "8.7.0"
+          "version": "8.8.0"
         }
       ]
     }
   },
-  "serialNumber": "urn:uuid:fcea0a77-fd43-43b3-af51-077d4d355bbe",
+  "serialNumber": "urn:uuid:e48b89a2-6849-4e8c-a8e0-7cd1f87f7990",
   "version": 1,
   "$schema": "http://cyclonedx.org/schema/bom-1.5.schema.json",
   "bomFormat": "CycloneDX",
