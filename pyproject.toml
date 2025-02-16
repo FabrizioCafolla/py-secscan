@@ -1,6 +1,6 @@
 [project]
 name = "py-secscan"
-version = "0.1.1"
+version = "0.1.2"
 authors = [{ name = "FabrizioCafolla" }]
 description = "PySecScan is the tool that allows you to perform security scans in your Python project through a simple YAML configuration."
 keywords = [
