@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/FabrizioCafolla/py-secscan/compare/v0.1.1...v0.1.2) (2025-02-16)
+
+
+### Bug Fixes
+
+* **ci:** uv not install extras ([29341a1](https://github.com/FabrizioCafolla/py-secscan/commit/29341a1c1b048ef1efa3c5b27a2e383196c925fe))
+
 ## [0.1.1](https://github.com/FabrizioCafolla/py-secscan/compare/v0.1.0...v0.1.1) (2025-02-16)
 
 
