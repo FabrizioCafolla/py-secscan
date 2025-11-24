@@ -22,7 +22,7 @@ jobs:
     if: ${{ github.head_ref != 'release-please--branches--main' }} # Skip release-please branch
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Python
         id: setup-python
